@@ -73,7 +73,6 @@
         input {
             width: 100%;
             padding: 12px;
-            /* 去掉原本的 margin-bottom，改由 input-group 控制间距 */
             margin-bottom: 0; 
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -87,7 +86,7 @@
             box-shadow: 0 0 5px rgba(255, 107, 107, 0.2);
         }
 
-        /* 3. 错误状态样式 */
+    
         input.error { border-color: red; background-color: #fff0f0; }
         .error-msg { 
             color: red; 
@@ -96,13 +95,13 @@
             display: none; 
         }
 
-        /* 4. 密码显示图标样式 */
+    
         #password { padding-right: 40px; }
         
         .toggle-password {
             position: absolute;
             right: 12px;
-            top: 38px; /* 根据 label 高度微调 */
+            top: 38px; 
             cursor: pointer;
             color: #999;
             z-index: 2;
@@ -173,7 +172,7 @@
     </div>
 
     <script>
-        // 1. 密码显示/隐藏切换
+        
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleIcon = document.querySelector('.toggle-password i');
@@ -189,7 +188,6 @@
             }
         }
 
-        // 2. 表单验证
         const form = document.getElementById('adminForm');
         
         form.addEventListener('submit', function(e) {
@@ -198,34 +196,28 @@
             const adminId = document.getElementById('admin_id');
             const password = document.getElementById('password');
 
-            // 辅助函数：清除旧错误
             function clearError(input) {
                 input.classList.remove('error');
                 input.parentElement.querySelector('.error-msg').style.display = 'none';
             }
 
-            // 辅助函数：显示新错误
             function showError(input) {
                 input.classList.add('error');
                 input.parentElement.querySelector('.error-msg').style.display = 'block';
                 isValid = false;
             }
 
-            // 清除之前的状态
             clearError(adminId);
             clearError(password);
 
-            // 检查 Admin ID 是否为空
             if (!adminId.value.trim()) {
                 showError(adminId);
             }
 
-            // 检查 Password 是否为空
             if (!password.value) {
                 showError(password);
             }
 
-            // 如果验证失败，阻止跳转
             if (!isValid) {
                 e.preventDefault();
             }
@@ -233,4 +225,5 @@
     </script>
 
 </body>
+
 </html>

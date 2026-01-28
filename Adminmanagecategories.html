@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Categories | Minion Shoe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background-color: #f1f4f6; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: #1a1a1a; color: #fff; display: flex; flex-direction: column; padding: 20px; }
+        .brand { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 40px; letter-spacing: 1px; color: #ff6b6b; }
+        .sidebar a { text-decoration: none; color: #b3b3b3; padding: 12px 15px; margin-bottom: 8px; display: block; border-radius: 6px; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background-color: #333; color: white; border-left: 4px solid #ff6b6b; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        
+        .cat-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 2fr; 
+            gap: 30px; 
+        }
+        
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            height: fit-content;
+        }
+
+        .card h3 { 
+            margin-top: 0; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid #eee; 
+        }
+
+        /* Form Elements */
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        input:focus, select:focus, textarea:focus { border-color: #ff6b6b; outline: none; }
+        
+        button.save-btn { width: 100%; padding: 12px; background-color: #ff6b6b; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button.save-btn:hover { background-color: #e05e5e; }
+
+        /* Category List Styling */
+        .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; animation: fadeIn 0.5s; }
+        .cat-info { display: flex; align-items: center; gap: 15px; }
+        .cat-icon { width: 40px; height: 40px; background-color: #f4f4f4; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 1.2em; }
+        .tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; color: #666; margin-left: 10px; }
+        
+        .delete-btn { color: #ccc; background: none; border: none; cursor: pointer; font-size: 1.1em; transition: 0.3s; }
+        .delete-btn:hover { color: #ff6b6b; transform: scale(1.1); }
+
+        /* Animation for adding new items */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">🍌 MINION SHOE</div>
+        <a href="manage_users.html"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="manage_categories.html" class="active"><i class="fa-solid fa-layer-group"></i> Categories</a>
+        <a href="#"><i class="fa-solid fa-shoe-prints"></i> Products</a>
+        <a href="#"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+        <a href="admin_login.html" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+    </div>
+
+    <div class="main-content">
+        <h1>Shoe Categories</h1>
+        
+        <div class="cat-grid">
+            
+            <div class="card">
+                <h3>Create Collection</h3>
+                <form id="addCatForm">
+                    <label>Category Name</label>
+                    <input type="text" id="catName" placeholder="e.g. Jordan Retros" required>
+
+                    <label>Category Icon</label>
+                    <select id="catIcon">
+                        <option value="👟">👟 Sneaker</option>
+                        <option value="🏃">🏃 Running</option>
+                        <option value="🏀">🏀 Basketball</option>
+                        <option value="👠">👠 Heels</option>
+                        <option value="👢">👢 Boots</option>
+                        <option value="🧦">🧦 Socks</option>
+                        <option value="⚽">⚽ Football</option>
+                        <option value="🔥">🔥 Hot/New</option>
+                    </select>
+
+                    <label>Parent Category</label>
+                    <select id="parentCat">
+                        <option value="Top Level">None (Top Level)</option>
+                        <option value="Men's Shoes">Men's Shoes</option>
+                        <option value="Women's Shoes">Women's Shoes</option>
+                        <option value="Kids">Kids</option>
+                        <option value="Accessories">Accessories</option>
+                    </select>
+
+                    <label>Description</label>
+                    <textarea id="catDesc" rows="3" placeholder="Short description for SEO..."></textarea>
+
+                    <button type="submit" class="save-btn">Add Category</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Current Inventory Categories</h3>
+                <div id="categoryList">
+                    
+                    <div class="cat-item">
+                        <div class="cat-info">
+                            <div class="cat-icon">🏃</div>
+                            <div>
+                                <strong>Performance Running</strong>
+                                <span class="tag">Men / Women</span>
+                                <div style="font-size:0.85em; color:#888;">Nike, Adidas, Brooks</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                            <strong>124 Items</strong>
+                            <button class="delete-btn" onclick="deleteCategory(this)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="cat-item">
+                        <div class="cat-info">
+                            <div class="cat-icon">👠</div>
+                            <div>
+                                <strong>Formal Heels</strong>
+                                <span class="tag">Women's Shoes</span>
+                                <div style="font-size:0.85em; color:#888;">Party wear, Office wear</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                            <strong>45 Items</strong>
+                            <button class="delete-btn" onclick="deleteCategory(this)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="cat-item">
+                        <div class="cat-info">
+                            <div class="cat-icon">🏀</div>
+                            <div>
+                                <strong>Basketball Sneakers</strong>
+                                <span class="tag">Top Level</span>
+                                <div style="font-size:0.85em; color:#888;">High-tops, Jordans</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                            <strong>210 Items</strong>
+                            <button class="delete-btn" onclick="deleteCategory(this)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        document.getElementById('addCatForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
+            
+            const name = document.getElementById('catName').value;
+            const icon = document.getElementById('catIcon').value;
+            const parent = document.getElementById('parentCat').value;
+            const desc = document.getElementById('catDesc').value || "No description provided";
+
+            
+            const newItemHTML = `
+                <div class="cat-item">
+                    <div class="cat-info">
+                        <div class="cat-icon">${icon}</div>
+                        <div>
+                            <strong>${name}</strong>
+                            <span class="tag">${parent}</span>
+                            <div style="font-size:0.85em; color:#888;">${desc}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                        <strong>0 Items</strong>
+                        <button class="delete-btn" onclick="deleteCategory(this)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+
+            
+            const listContainer = document.getElementById('categoryList');
+            listContainer.insertAdjacentHTML('afterbegin', newItemHTML);
+
+           
+            document.getElementById('addCatForm').reset();
+        });
+
+        
+        function deleteCategory(btn) {
+            if(confirm("Are you sure you want to delete this category?")) {
+                
+                const item = btn.closest('.cat-item'); 
+                item.remove();
+            }
+        }
+    </script>
+
+</body>
+</html>

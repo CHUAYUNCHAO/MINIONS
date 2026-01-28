@@ -8,7 +8,6 @@
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; }
         
-        /* Left Side - Image Background */
         .split-left {
             flex: 1;
             background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://w0.peakpx.com/wallpaper/178/512/HD-wallpaper-sneakers-hype-jordan-klekt-nike-shoes-stock-x-we-the-new.jpg'); 
@@ -23,7 +22,7 @@
         .split-left h1 { font-size: 3rem; margin: 0; text-transform: uppercase; letter-spacing: 5px; }
         .split-left p { font-size: 1.2rem; letter-spacing: 2px; }
 
-        /* Right Side - Form */
+        
         .split-right {
             flex: 1;
             background: white;
@@ -33,32 +32,30 @@
             padding: 40px;
         }
         .login-container { width: 100%; max-width: 400px; }
-        
-        /* Form Styling */
+    
         h2 { color: #333; margin-bottom: 30px; font-size: 2rem; }
         label { display: block; color: #666; margin-bottom: 5px; font-size: 0.9em; }
         
-        /* Input Container for Positioning icons */
         .input-group { position: relative; margin-bottom: 20px; }
         
         input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; background-color: #f9f9f9; transition: 0.3s; }
         input:focus { border-color: #ff6b6b; outline: none; background-color: white; }
 
-        /* 3a. 特别为密码框增加右侧内边距，防止文字被图标挡住 */
+     
         #password { padding-right: 45px; }
         
-        /* Error State Styling */
+     
         input.error { border-color: red; background-color: #fff0f0; }
         .error-msg { color: red; font-size: 0.8em; margin-top: 5px; display: none; }
 
-        /* 3b. 美化 Password Toggle Button */
+     
         .toggle-password {
             position: absolute;
-            right: 15px; /* 距离右边的位置 */
-            top: 38px; /* 根据 label 高度和 input padding 调整垂直位置 */
+            right: 15px; 
+            top: 38px; 
             cursor: pointer;
-            color: #aaa; /* 默认颜色浅一点 */
-            font-size: 1.1rem; /* 图标稍微大一点 */
+            color: #aaa; 
+            font-size: 1.1rem; 
             user-select: none;
             transition: color 0.3s;
             z-index: 2;
@@ -72,7 +69,7 @@
         .links { margin-top: 20px; text-align: center; color: #666; }
         .links a { color: #1a1a1a; text-decoration: none; font-weight: bold; }
         
-        /* Mobile adjustment */
+       
         @media (max-width: 768px) {
             .split-left { display: none; }
         }
@@ -116,28 +113,28 @@
     </div>
 
     <script>
-        // 4. 更新 Password Visibility Toggle 逻辑，切换图标类名
+    
         function togglePassword() {
             const passwordInput = document.getElementById('password');
-            // 获取 span 里面的 i 标签
+           
             const toggleIcon = document.querySelector('.toggle-password i');
 
             if (passwordInput.type === "password") {
-                // 显示密码
+               
                 passwordInput.type = "text";
-                // 切换图标为 "斜杠眼睛" (fa-eye-slash)
+              
                 toggleIcon.classList.remove('fa-eye');
                 toggleIcon.classList.add('fa-eye-slash');
             } else {
-                // 隐藏密码
+              
                 passwordInput.type = "password";
-                 // 切换回 "正常眼睛" (fa-eye)
+             
                 toggleIcon.classList.remove('fa-eye-slash');
                 toggleIcon.classList.add('fa-eye');
             }
         }
 
-        // 2. Form Validation Logic (保持不变)
+       
         const form = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passInput = document.getElementById('password');

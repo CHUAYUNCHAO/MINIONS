@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Minion Shoe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; }
+        
+        /* Left Side - Image Background */
+        .split-left {
+            flex: 1;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://w0.peakpx.com/wallpaper/178/512/HD-wallpaper-sneakers-hype-jordan-klekt-nike-shoes-stock-x-we-the-new.jpg'); 
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: wheat;
+            flex-direction: column;
+        }
+        .split-left h1 { font-size: 3rem; margin: 0; text-transform: uppercase; letter-spacing: 5px; }
+        .split-left p { font-size: 1.2rem; letter-spacing: 2px; }
+
+        /* Right Side - Form */
+        .split-right {
+            flex: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .login-container { width: 100%; max-width: 400px; }
+        
+        /* Form Styling */
+        h2 { color: #333; margin-bottom: 30px; font-size: 2rem; }
+        label { display: block; color: #666; margin-bottom: 5px; font-size: 0.9em; }
+        
+        /* Input Container for Positioning icons */
+        .input-group { position: relative; margin-bottom: 20px; }
+        
+        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; background-color: #f9f9f9; transition: 0.3s; }
+        input:focus { border-color: #ff6b6b; outline: none; background-color: white; }
+
+        /* 3a. 特别为密码框增加右侧内边距，防止文字被图标挡住 */
+        #password { padding-right: 45px; }
+        
+        /* Error State Styling */
+        input.error { border-color: red; background-color: #fff0f0; }
+        .error-msg { color: red; font-size: 0.8em; margin-top: 5px; display: none; }
+
+        /* 3b. 美化 Password Toggle Button */
+        .toggle-password {
+            position: absolute;
+            right: 15px; /* 距离右边的位置 */
+            top: 38px; /* 根据 label 高度和 input padding 调整垂直位置 */
+            cursor: pointer;
+            color: #aaa; /* 默认颜色浅一点 */
+            font-size: 1.1rem; /* 图标稍微大一点 */
+            user-select: none;
+            transition: color 0.3s;
+            z-index: 2;
+        }
+        .toggle-password:hover { color: black; }
+
+        button { width: 100%; padding: 15px; background-color: #1a1a1a; color: white; border: none; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px;}
+        button:hover { background-color: rgb(0, 132, 168); 
+            color: #1a1a1a;; }
+        
+        .links { margin-top: 20px; text-align: center; color: #666; }
+        .links a { color: #1a1a1a; text-decoration: none; font-weight: bold; }
+        
+        /* Mobile adjustment */
+        @media (max-width: 768px) {
+            .split-left { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-left">
+        <h1>Minion Shoe</h1>
+        <p>STEP INTO GREATNESS</p>
+    </div>
+
+    <div class="split-right">
+        <div class="login-container">
+            <h2>Welcome Back !</h2>
+            <form id="loginForm" action="auth_user.php" method="POST">
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="minions@example.com">
+                    <div class="error-msg">Please enter a valid email.</div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••">
+                    <span class="toggle-password" onclick="togglePassword()">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
+                    <div class="error-msg">Password cannot be empty.</div>
+                </div>
+                
+                <button type="submit">SIGN IN</button>
+            </form>
+            
+            <div class="links">
+                <p>Not a member? <a href="register.html">Join Us</a></p>
+                <p><a href="#" style="font-weight: normal; font-size: 0.9em; color:#888;">Forgot Password?</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 4. 更新 Password Visibility Toggle 逻辑，切换图标类名
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            // 获取 span 里面的 i 标签
+            const toggleIcon = document.querySelector('.toggle-password i');
+
+            if (passwordInput.type === "password") {
+                // 显示密码
+                passwordInput.type = "text";
+                // 切换图标为 "斜杠眼睛" (fa-eye-slash)
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                // 隐藏密码
+                passwordInput.type = "password";
+                 // 切换回 "正常眼睛" (fa-eye)
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // 2. Form Validation Logic (保持不变)
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passInput = document.getElementById('password');
+
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            emailInput.classList.remove('error');
+            passInput.classList.remove('error');
+            document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+
+            if (!emailInput.value || !emailInput.value.includes('@')) {
+                emailInput.classList.add('error');
+                emailInput.parentElement.querySelector('.error-msg').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!passInput.value) {
+                passInput.classList.add('error');
+                passInput.parentElement.querySelector('.error-msg').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+</body>
+</html>

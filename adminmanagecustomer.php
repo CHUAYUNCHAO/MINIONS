@@ -56,10 +56,11 @@ $vipCount = ($vipCountResult) ? $vipCountResult->fetch_assoc()['vips'] : 0;
 
     <div class="sidebar">
         <div class="brand">🍌 MINION SHOE</div>
-        <a href="adminmanagecustomer.php" class="active"><i class="fa-solid fa-users"></i> Customers</a>
+         <a href="admindashboard.php" ><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <a href="adminmanagecustomer.php"><i class="fa-solid fa-users"></i> Customers</a>
         <a href="adminmanagecategories.php"><i class="fa-solid fa-layer-group"></i> Categories</a>
-        <a href="manage_products.php"><i class="fa-solid fa-shoe-prints"></i> Products</a>
-        <a href="manage_orders.php"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+        <a href="adminmanageproduct.php"><i class="fa-solid fa-shoe-prints"></i> Products</a>
+        <a href="adminorders.php"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
         <a href="adminlogin.php" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
     </div>
 

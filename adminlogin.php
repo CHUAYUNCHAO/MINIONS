@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="php-error"><?php echo $error_msg; ?></div>
         <?php endif; ?>
 
-        <form id="adminForm" action="adminmanagecustomer.php" method="POST">
+        <form id="adminForm" action="admindashboard.php" method="POST">
             <div class="input-group">
                 <label>Admin ID / Email</label>
                 <input type="text" id="admin_id" name="admin_id" placeholder="gru@minionshoe.com" required>

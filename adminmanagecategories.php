@@ -7,33 +7,42 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 // 2. Handle DELETE Request
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
-    $conn->query("DELETE FROM categories WHERE id = $id");
-    header("Location: manage_categories.php");
-    exit();
+    // Prepare statement for security
+    $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        header("Location: adminmanagecategories.php?status=deleted");
+        exit();
+    }
 }
 
 // 3. Handle POST Request (Add or Update)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($conn, $_POST['catName']);
-    $icon = mysqli_real_escape_string($conn, $_POST['catIcon']);
-    $parent = mysqli_real_escape_string($conn, $_POST['parentCat']);
-    $desc = mysqli_real_escape_string($conn, $_POST['catDesc']);
+    $name = $_POST['catName'];
+    $icon = $_POST['catIcon'];
+    $parent = $_POST['parentCat'];
+    $desc = $_POST['catDesc'];
     $catId = isset($_POST['catId']) ? intval($_POST['catId']) : 0;
 
     if ($catId > 0) {
         // Update Existing
-        $sql = "UPDATE categories SET name='$name', icon='$icon', parent_cat='$parent', description='$desc' WHERE id=$catId";
+        $stmt = $conn->prepare("UPDATE categories SET name=?, icon=?, parent_cat=?, description=? WHERE id=?");
+        $stmt->bind_param("ssssi", $name, $icon, $parent, $desc, $catId);
+        $status = "updated";
     } else {
         // Insert New
-        $sql = "INSERT INTO categories (name, icon, parent_cat, description) VALUES ('$name', '$icon', '$parent', '$desc')";
+        $stmt = $conn->prepare("INSERT INTO categories (name, icon, parent_cat, description) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $name, $icon, $parent, $desc);
+        $status = "success";
     }
     
-    $conn->query($sql);
-    header("Location: manage_categories.php");
-    exit();
+    if ($stmt->execute()) {
+        header("Location: adminmanagecategories.php?status=$status");
+        exit();
+    }
 }
 
-
+// Fetch categories for the list view
 $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
 ?>
 
@@ -44,7 +53,6 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
     <title>Admin - Categories | Minion Shoe</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Keep your existing CSS styles here */
         body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background-color: #f1f4f6; }
         .sidebar { width: 260px; background-color: #1a1a1a; color: #fff; display: flex; flex-direction: column; padding: 20px; }
         .brand { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 40px; color: wheat; }
@@ -54,36 +62,47 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
         .cat-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
         .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        
+        /* Matching the Yellow Add Category button style */
         .save-btn { width: 100%; padding: 12px; background-color: #dde400; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        
         .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-        .cat-icon { width: 40px; height: 40px; background-color: #f4f4f4; border-radius: 5px; display: flex; justify-content: center; align-items: center; margin-right: 15px;}
-        .tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; color: #666; }
-        .action-btn { background: none; border: none; cursor: pointer; color: #aaa; margin-left: 10px; }
+        .cat-icon { width: 40px; height: 40px; background-color: #f4f4f4; border-radius: 5px; display: flex; justify-content: center; align-items: center; margin-right: 15px; font-size: 1.2rem; }
+        .tag { background: #e3f2fd; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; color: #0d47a1; font-weight: bold; }
+        .action-btn { background: none; border: none; cursor: pointer; color: #aaa; margin-left: 10px; transition: 0.2s; }
+        .action-btn:hover { color: #333; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <div class="brand">🍌 MINION SHOE</div>
-    <a href="adminmanagecustomer.php" ><i class="fa-solid fa-users"></i> Customers</a>
-    <a href="adminmanagecategories.php"><i class="fa-solid fa-layer-group"></i> Categories</a>
-    <a href="manage_products.php"><i class="fa-solid fa-shoe-prints"></i> Products</a>
-    <a href="manage_orders.php"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
-    <a href="adminlogin.php" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
-</div>>
+        <a href="admindashboard.php"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <a href="adminmanagecustomer.php"><i class="fa-solid fa-users"></i> Customers</a>
+        <a href="adminmanagecategories.php" class="active"><i class="fa-solid fa-layer-group"></i> Categories</a>
+        <a href="adminmanageproduct.php"><i class="fa-solid fa-shoe-prints"></i> Products</a>
+        <a href="adminorders.php"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+        <a href="adminlogin.php" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <div class="main-content">
         <h1>Shoe Categories</h1>
+
+        <?php if(isset($_GET['status'])): ?>
+            <div style="background: #e8f5e9; color: #1b5e20; padding: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #c8e6c9;">
+                <i class="fa-solid fa-circle-check"></i> 
+                Category successfully <?php echo htmlspecialchars($_GET['status']); ?>!
+            </div>
+        <?php endif; ?>
         
         <div class="cat-grid">
             <div class="card">
                 <h3 id="formTitle">Create Collection</h3>
-                <form action="manage_categories.php" method="POST" id="catForm">
+                <form action="adminmanagecategories.php" method="POST" id="catForm">
                     <input type="hidden" name="catId" id="catId" value="">
                     
                     <label>Category Name</label>
-                    <input type="text" name="catName" id="catName" required>
+                    <input type="text" name="catName" id="catName" required placeholder="e.g. Running">
 
                     <label>Category Icon</label>
                     <select name="catIcon" id="catIcon">
@@ -123,10 +142,8 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
                             </div>
                         </div>
                         <div>
-                            <button class="action-btn" onclick="editCategory(<?php echo htmlspecialchars(json_encode($row)); ?>)">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <a href="manage_categories.php?delete=<?php echo $row['id']; ?>" class="action-btn" onclick="return confirm('Are you sure?')">
+                            
+                            <a href="adminmanagecategories.php?delete=<?php echo $row['id']; ?>" class="action-btn" onclick="return confirm('Are you sure?')">
                                 <i class="fa-solid fa-trash" style="color:#ff6b6b"></i>
                             </a>
                         </div>
@@ -138,8 +155,10 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
     </div>
 
     <script>
-        // Use JSON to pass PHP data to JS for editing
+        // The JavaScript Bridge to fill the form
         function editCategory(data) {
+            document.getElementById('catForm').action = "adminmanagecategories.php";
+
             document.getElementById('catId').value = data.id;
             document.getElementById('catName').value = data.name;
             document.getElementById('catIcon').value = data.icon;
@@ -149,9 +168,11 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY id DESC");
             document.getElementById('formTitle').innerText = "Edit Category";
             document.getElementById('submitBtn').innerText = "Update Category";
             document.getElementById('cancelBtn').style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetForm() {
+            document.getElementById('catForm').action = "adminmanagecategories.php";
             document.getElementById('catId').value = "";
             document.getElementById('catForm').reset();
             document.getElementById('formTitle').innerText = "Create Collection";

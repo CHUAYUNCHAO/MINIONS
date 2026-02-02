@@ -27,15 +27,18 @@ while($row = $result->fetch_assoc()) {
         .card-image img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
         .btn-add { width: 100%; padding: 10px; border: 2px solid var(--primary-color); background: transparent; font-weight: 700; transition: 0.3s; }
         .btn-add:hover { background: var(--primary-color); color: white; }
+        nav a { color: black; text-decoration: none; margin: 15px; font-weight: bold;}
     </style>
 </head>
 <body>
     <header>
         <div class="brand">🍌 MINION SHOE</div>
         <nav>
-            <a href="homeindex.php" class="me-3">Home</a>
-            <a href="catelouge.php" class="active me-3">Shop</a>
+          <a href="homeindex.php">Home</a>
+            <a href="catelouge.php" class="active">Shop</a>
+            <a href="shoedetail.php">Detail</a>
             <a href="aboutus.php">About</a>
+    </nav>
         </nav>
         <div class="nav-icons">
             <a href="cart.php" style="text-decoration:none; color:inherit;"><i class="fa-solid fa-cart-shopping"></i> Cart</a>

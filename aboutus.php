@@ -1,7 +1,5 @@
 <?php
 session_start();
-// Include the database configuration if you want to pull stats from the DB later
-// include 'db_config.php'; 
 ?>
 
 <!DOCTYPE html>
@@ -9,7 +7,7 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us | ShoeHaven</title>
+    <title>About Us | Minion Shoes</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,17 +24,17 @@ session_start();
     top: 0;
     z-index: 1000;
 }
-
-/* Ensure icons/buttons stay together on the right */
+div.brand{ font-weight: bold;}
 .nav-icons {
     display: flex;
     align-items: center;
-    gap: 20px; /* Adds space between Cart and Log Out */
+    gap: 20px; 
 }
+ nav a { Color: black; margin: 15px; text-decoration: none; font-weight: bold;} 
 
 :root {
     --primary-color: #111;
-    --accent-color: #ff6b6b; 
+    --accent-color: wheat; 
     --bg-color: #f8f9fa;
     --text-dark: #333;
     --text-muted: #666;
@@ -51,9 +49,8 @@ body {
     min-height: 100vh;
 }
 
-/* --- HERO SECTION --- */
 .about-hero {
-    background: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&q=80') no-repeat center center/cover;
+    background: url('https://i.pinimg.com/736x/0c/b9/f8/0cb9f88a59191752626863c492e99ec7.jpg') no-repeat center center/cover;
     height: 400px;
     position: relative;
     display: flex;
@@ -64,7 +61,6 @@ body {
     margin-bottom: 50px;
 }
 
-/* Dark Overlay for better text readability */
 .about-hero::before {
     content: '';
     position: absolute;
@@ -278,9 +274,48 @@ footer {
             </div>
         </div>
 
-        <h2 class="section-title mt-5">Meet The Squad</h2>
-        <div class="row g-4" id="team-container">
+    </div>
+    <h2 class="section-title mt-5">Meet The Squad</h2>
+        <div class="row g-4">
+            
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-img-wrapper">
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80" class="team-img" alt="CEO" loading="lazy">
+                    </div>
+                    <div class="team-info">
+                        <div class="member-name">CHUA YUN CHAO</div>
+                        <div class="member-role">Founder & CEO</div>
+                    </div>
+                </div>
             </div>
+
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-img-wrapper">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80" class="team-img" alt="Designer" loading="lazy">
+                    </div>
+                    <div class="team-info">
+                        <div class="member-name">Cindy Tiong</div>
+                        <div class="member-role">Head of Design</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-img-wrapper">
+                        <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500&q=80" class="team-img" alt="Marketing" loading="lazy">
+                    </div>
+                    <div class="team-info">
+                        <div class="member-name">CHOI ZHONG BAO</div>
+                        <div class="member-role">Marketing Lead</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
     <footer>
@@ -289,7 +324,7 @@ footer {
         <div class="social-icons mt-3">
 
 <p style="margin-top:10px; font-size:0.8rem;">
-            Follow us on <a href="https://youtu.be/dQw4w9WgXcQ?si=WHiTSICEQ8Md3R-p" class="text-white">Instagram</a> | <a href="https://youtu.be/dQw4w9WgXcQ?si=WHiTSICEQ8Md3R-p" class="text-white">Facebook</a>
+            Follow us on <a href="https://www.instagram.com/minionshoemy?igsh=MTRjdG8zcm1wang4YQ==" class="text-white">Instagram</a> | <a href="https://www.facebook.com/share/1Aob66BUNA/" class="text-white">Facebook</a>
         </p>
 
         </div>

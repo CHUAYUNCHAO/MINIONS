@@ -9,9 +9,8 @@ $query = "SELECT * FROM productsdetail ORDER BY id DESC";
 $result = $conn->query($query);
 $products = [];
 while($row = $result->fetch_assoc()) {
-    // Convert comma-separated strings back into arrays for JavaScript
-    $row['sizes'] = explode(',', $row['sizes']);
-    $row['colors'] = explode(',', $row['colors']);
+    $row['sizes'] = explode(',', $row['sizes'] ?? '');
+    $row['colors'] = explode(',', $row['colors'] ?? '');
     $products[] = $row;
 }
 ?>
@@ -20,52 +19,55 @@ while($row = $result->fetch_assoc()) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Product Details | Minion Shoe</title>
+    <title>Minion Shoe | Gallery</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary-color: #111; --accent-color: #ff6b6b; --success-color: #2ecc71; }
+        :root { --dark: #111; --accent: #ff6b6b; --grey: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: white; padding-bottom: 50px; }
-        h1{ font-weight: bold;}
-        .custom-header { background: linear-gradient(135deg, #111, #333); color: white; padding: 3rem 2rem; text-align: center; border-radius: 0 0 20px 20px; }
-
-        nav{ margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        nav a { Color: white; margin: 15px; text-decoration: none; font-weight: bold;} 
-
-        /* Shoe Card Styling */
-        .shoe-card { background: white; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
-        .shoe-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
-        .img-wrapper { height: 220px; overflow: hidden; background: #f8f9fa; display: flex; align-items: center; justify-content: center; }
-        .shoe-card img { max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.5s; }
         
-        /* Modal Options Styling */
-        .size-option { cursor: pointer; padding: 8px 12px; border: 2px solid #ddd; border-radius: 5px; margin: 5px; display: inline-block; font-weight: 600; }
-        .size-option.active { background: #111; color: white; border-color: #111; }
-        .color-option { cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: inline-block; margin: 5px; border: 2px solid #eee; transition: 0.2s; }
-        .color-option.active { transform: scale(1.2); border-color: #111; }
+        /* Navigation & Header */
+        .custom-header { background: linear-gradient(135deg, #111, #333); color: white; padding: 3rem 2rem; text-align: center; border-radius: 0 0 20px 20px; }
+        nav { margin-top: 20px; }
+        nav a { color: rgba(255,255,255,0.7); margin: 0 15px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        nav a:hover, nav a.active { color: white; }
 
-        .toast-custom { position: fixed; bottom: 20px; right: 20px; background: var(--success-color); color: white; padding: 15px 25px; border-radius: 10px; transform: translateY(100px); transition: 0.3s; z-index: 1050; }
-        .toast-custom.show { transform: translateY(0); }
+        /* Product Cards */
+        .shoe-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: 0.3s; height: 100%; display: flex; flex-direction: column; border: 1px solid #eee; }
+        .shoe-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .img-wrapper { height: 220px; background: var(--grey); display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .img-wrapper img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+        .shoe-body { padding: 20px; }
+        .price-tag { color: var(--accent); font-weight: 800; font-size: 1.2rem; }
+        .btn-view { width: 100%; padding: 10px; background: transparent; border: 2px solid var(--dark); font-weight: bold; border-radius: 6px; transition: 0.3s; margin-top: 15px; }
+        .btn-view:hover { background: var(--dark); color: white; }
+
+        /* Detail Modal */
+        .modal-content { border-radius: 20px; border: none; overflow: hidden; }
+        .modal-body { padding: 40px; }
+        .modal-img-box { background: var(--grey); border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; }
+        .size-option { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; margin: 5px; display: inline-block; font-size: 0.85rem; font-weight: 600; color: #666; }
+        .color-option { width: 25px; height: 25px; border-radius: 50%; display: inline-block; margin: 5px; border: 2px solid #eee; }
     </style>
 </head>
 <body>
 
     <div class="custom-header">
         <div class="container">
-            <h1><i class="fas fa-shoe-prints"></i> Minion Shoe Gallery</h1>
-            <p>Select your style and explore the details.</p>
+            <h1 style="font-weight: 900;"><i class="fas fa-shoe-prints"></i> Minion Shoe Gallery</h1>
+            <p>Explore our latest collection with detailed specifications.</p>
+            <nav>
+                <a href="homeindex.php">Home</a>
+                <a href="catelouge.php">Shop</a>
+                <a href="shoedetail.php" class="active">Detail Gallery</a>
+                <a href="aboutus.php">About</a>
+            </nav>
         </div>
-        <nav>
-            <a href="homeindex.php">Home</a>
-            <a href="catelouge.php" class="active">Shop</a>
-            <a href="shoedetail.php">Detail</a>
-            <a href="aboutus.php">About</a>
-        </nav>
     </div>
 
-    <div class="container mt-4">
-        <div class="d-flex justify-content-center gap-3 mb-5">
-            <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('all')">All</button>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-center gap-2 mb-5">
+            <button class="btn btn-dark rounded-pill px-4" onclick="filterProducts('all')">All Kicks</button>
             <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('men')">Men</button>
             <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('women')">Women</button>
             <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('kids')">Kids</button>
@@ -78,39 +80,38 @@ while($row = $result->fetch_assoc()) {
     <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="modal-title fw-bold" id="modalTitle">View Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <img id="modalImg" src="" class="img-fluid rounded shadow-sm" alt="Shoe">
+                <div class="modal-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-5 mb-4 mb-md-0">
+                            <div class="modal-img-box">
+                                <img id="modalImg" src="" class="img-fluid" alt="Shoe">
+                            </div>
                         </div>
                         <div class="col-md-7">
-                            <span id="modalCat" class="text-muted text-uppercase fw-bold small">Category</span>
-                            <h2 id="modalName" class="fw-bold mb-2">Name</h2>
-                            <h3 id="modalPrice" class="text-danger fw-bold mb-3">RM 0.00</h3>
-                            <p id="modalDesc" class="text-muted mb-4">Description goes here...</p>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <small id="modalCat" class="text-muted text-uppercase fw-bold"></small>
+                                    <h2 id="modalName" class="fw-bold mb-2"></h2>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <h3 id="modalPrice" class="price-tag mb-3"></h3>
+                            <p id="modalDesc" class="text-muted small mb-4"></p>
 
-                            <label class="fw-bold d-block mb-2">Size</label>
-                            <div id="modalSizes" class="mb-3"></div>
+                            <h6 class="fw-bold mb-2">Available Sizes</h6>
+                            <div id="modalSizes" class="mb-4"></div>
 
-                            <label class="fw-bold d-block mb-2">Color</label>
+                            <h6 class="fw-bold mb-2">Colors</h6>
                             <div id="modalColors" class="mb-4"></div>
 
-                            <button class="btn btn-dark w-100 py-3 fw-bold" onclick="addToCart()">
-                                <i class="fas fa-cart-plus me-2"></i> Add to Cart
+                            <button type="button" class="btn btn-dark w-100 py-3 fw-bold" data-bs-dismiss="modal">
+                                Close Details
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="successToast" class="toast-custom">
-        <i class="fas fa-check-circle me-2"></i> Item added to cart!
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -121,7 +122,6 @@ while($row = $result->fetch_assoc()) {
         function filterProducts(type) {
             const container = document.getElementById('productContainer');
             container.innerHTML = '';
-            
             const filtered = type === 'all' ? products : products.filter(p => p.group_name === type);
 
             filtered.forEach(p => {
@@ -131,9 +131,11 @@ while($row = $result->fetch_assoc()) {
                             <div class="img-wrapper"><img src="${p.image_url}"></div>
                             <div class="shoe-body">
                                 <small class="text-muted fw-bold">${p.category}</small>
-                                <h5 class="shoe-title">${p.product_name}</h5>
+                                <h5 class="fw-bold my-1">${p.product_name}</h5>
                                 <div class="price-tag">RM ${parseFloat(p.price).toFixed(2)}</div>
-                                <button class="btn-view" onclick="openModal(${p.id})">View Details</button>
+                                <button class="btn-view" onclick="openModal(${p.id})">
+                                    <i class="far fa-eye me-1"></i> View Details
+                                </button>
                             </div>
                         </div>
                     </div>`;
@@ -142,44 +144,24 @@ while($row = $result->fetch_assoc()) {
 
         function openModal(id) {
             const p = products.find(item => item.id == id);
-            
             document.getElementById('modalImg').src = p.image_url;
             document.getElementById('modalName').innerText = p.product_name;
             document.getElementById('modalCat').innerText = p.category;
             document.getElementById('modalPrice').innerText = "RM " + parseFloat(p.price).toFixed(2);
             document.getElementById('modalDesc').innerText = p.description;
 
-            // Sizes
-            let sHtml = '';
-            p.sizes.forEach(s => sHtml += `<span class="size-option" onclick="select(this)">${s}</span>`);
-            document.getElementById('modalSizes').innerHTML = sHtml;
+            document.getElementById('modalSizes').innerHTML = p.sizes.map(s => 
+                `<span class="size-option">${s}</span>`
+            ).join('');
 
-            // Colors
-            let cHtml = '';
-            p.colors.forEach(c => cHtml += `<span class="color-option" style="background:${c.trim()}" onclick="select(this)"></span>`);
-            document.getElementById('modalColors').innerHTML = cHtml;
+            document.getElementById('modalColors').innerHTML = p.colors.map(c => 
+                `<span class="color-option" style="background:${c.trim()}"></span>`
+            ).join('');
 
             productModal.show();
         }
 
-        function select(el) {
-            const siblings = el.parentElement.children;
-            for(let s of siblings) s.classList.remove('active');
-            el.classList.add('active');
-        }
-
-        function addToCart() {
-            const s = document.querySelector('.size-option.active');
-            const c = document.querySelector('.color-option.active');
-
-            if(!s || !c) return alert("Please pick size & color!");
-
-            productModal.hide();
-            const t = document.getElementById('successToast');
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
+        // Initial load
         filterProducts('all');
     </script>
 </body>

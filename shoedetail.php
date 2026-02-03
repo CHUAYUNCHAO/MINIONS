@@ -67,10 +67,8 @@ while($row = $result->fetch_assoc()) {
 
     <div class="container mt-5">
         <div class="d-flex justify-content-center gap-2 mb-5">
-            <button class="btn btn-dark rounded-pill px-4" onclick="filterProducts('all')">All Kicks</button>
-            <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('men')">Men</button>
-            <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('women')">Women</button>
-            <button class="btn btn-outline-dark rounded-pill px-4" onclick="filterProducts('kids')">Kids</button>
+            <button class="btn btn-dark rounded-pill px-4" onclick="filterProducts('all')">List</button>
+
         </div>
 
         <div class="row g-4" id="productContainer">

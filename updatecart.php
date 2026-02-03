@@ -2,21 +2,27 @@
 session_start();
 header('Content-Type: application/json');
 
-// 1. Validate that the required parameters are sent
-if (isset($_GET['index']) && isset($_GET['action'])) {
+// Check if all necessary parameters are provided
+if (isset($_GET['index']) && isset($_GET['action'])) 
     $index = intval($_GET['index']);
     $action = $_GET['action'];
     $value = isset($_GET['value']) ? $_GET['value'] : null;
 
-    // 2. Check if the item actually exists in the cart
+    // Check if the item exists in the user's cart session
     if (isset($_SESSION['cart'][$index])) {
         
         if ($action === 'quantity') {
-            // BUG FIX: Ensure the value is treated as an integer
+            // Bug Fix: Update the specific item's quantity
             $_SESSION['cart'][$index]['quantity'] = intval($value);
             
+        }   if (isset($_SESSION['cart'][$index])) {
+        // Handle Color Update
+        if ($action === 'color') {
+            $_SESSION['cart'][$index]['color'] = htmlspecialchars($value);
+            echo json_encode(['success' => true]);
+            
         } elseif ($action === 'remove') {
-            // BUG FIX: Use array_splice to re-index the array after removal
+            // Bug Fix: Cleanly remove the item from the session array
             array_splice($_SESSION['cart'], $index, 1);
         }
         
@@ -25,5 +31,5 @@ if (isset($_GET['index']) && isset($_GET['action'])) {
     }
 }
 
-echo json_encode(['success' => false, 'message' => 'Invalid Request']);
+echo json_encode(['success' => false, 'message' => 'Invalid request']);
 ?>

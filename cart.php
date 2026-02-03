@@ -58,11 +58,11 @@ $total = $subtotal + $tax + $shipping;
                                         <small class="text-muted me-2">Color:</small>
                                         <select class="form-select form-select-sm w-auto" onchange="updateCart(<?= $index ?>, 'color', this.value)">
                                             <?php 
-                                            // Hardcoded options for now; ensure logic matches session key 'color'
+                                            
                                             $colors = ['black', 'red', 'white', 'blue', 'grey', 'silver'];
                                             foreach($colors as $c): 
-                                                // Fixed: using $item['color'] instead of plural
-                                                $isSelected = ($item['color'] == $c || ($item['color'] == "rgb(0, 0, 0)" && $c == 'black')) ? 'selected' : '';
+                                               
+                                                $isSelected = ($item['colors'] == $c || ($item['colors'] == "rgb(0, 0, 0)" && $c == 'black')) ? 'selected' : '';
                                             ?>
                                                 <option value="<?= $c ?>" <?= $isSelected ?>><?= ucfirst($c) ?></option>
                                             <?php endforeach; ?>

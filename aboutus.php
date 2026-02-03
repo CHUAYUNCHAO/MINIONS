@@ -1,5 +1,7 @@
 <?php
 session_start();
+require_once 'Minionshoesconfig.php';
+include 'homeheader.php';
 ?>
 
 <!DOCTYPE html>
@@ -13,17 +15,19 @@ session_start();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-    header {
-    background: white;
-    padding: 15px 40px;
-    display: flex; /* Mandatory for side-by-side layout */
-    justify-content: space-between; /* Pushes brand to left, nav to center, icons to right */
-    align-items: center; /* Centers items vertically */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
+
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f9f9f9; color: #333; line-height: 1.6; }
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #111; }
+        nav { display: flex; gap: 25px; }
+        nav a { font-weight: 600; color: #555; font-size: 0.95rem; }
+        nav a:hover { color: #ff6b6b; }
+        .nav-icons { display: flex; gap: 15px; align-items: center; }
+        .btn-login, .btn-admin { background-color: #111; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; }
+        .btn-login:hover, .btn-admin:hover { background-color: #ff6b6b; }
 div.brand{ font-weight: bold;}
 .nav-icons {
     display: flex;
@@ -224,27 +228,6 @@ footer {
 
 .social-icons a:hover { color: var(--accent-color); }
     </style>
-</head>
-<body>
-
-  <header>
-    <div class="brand">🍌 MINION SHOE</div>
-    <nav>
-      <a href="homeindex.php">Home</a>
-            <a href="catelouge.php" class="active">Shop</a>
-            <a href="shoedetail.php">Detail</a>
-            <a href="aboutus.php">About</a>
-    </nav>
-    <div class="nav-icons">
-        <a href="cart.php">🛒 Cart</a>
-        <?php if(isset($_SESSION['user_id'])): ?>
-            <a href="logout.php" style="color: red; font-weight: bold; margin-left: 20px;">Log Out</a>
-        <?php else: ?>
-            <a href="login.php" class="btn-login">Login</a>
-        <?php endif; ?>
-    </div>
-</header>
-
     <div class="about-hero">
         <div class="hero-content">
             <h1>Who We Are</h1>
@@ -318,18 +301,7 @@ footer {
 
     </div>
 
-    <footer>
-          <p>&copy; 2026 Minion Shoe Inc. All Rights Reserved.</p>
-
-        <div class="social-icons mt-3">
-
-<p style="margin-top:10px; font-size:0.8rem;">
-            Follow us on <a href="https://www.instagram.com/minionshoemy?igsh=MTRjdG8zcm1wang4YQ==" class="text-white">Instagram</a> | <a href="https://www.facebook.com/share/1Aob66BUNA/" class="text-white">Facebook</a>
-        </p>
-
-        </div>
-    </footer>
-
+    <?php include 'homefooter.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // --- 1. Animation for Stats ---

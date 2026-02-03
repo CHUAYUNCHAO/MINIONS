@@ -1,6 +1,7 @@
 <?php
 session_start();
-
+require_once 'Minionshoesconfig.php';
+include 'homeheader.php';
 // 1. Calculate Totals
 $subtotal = 0;
 if (!empty($_SESSION['cart'])) {
@@ -21,6 +22,18 @@ $total = $subtotal + $tax + $shipping;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f9f9f9; color: #333; line-height: 1.6; }
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #111; }
+        nav { display: flex; gap: 25px; }
+        nav a { font-weight: 600; color: #555; font-size: 0.95rem; }
+        nav a:hover { color: #ff6b6b; }
+        .nav-icons { display: flex; gap: 15px; align-items: center; }
+        .btn-login, .btn-admin { background-color: #111; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; }
+        .btn-login:hover, .btn-admin:hover { background-color: #ff6b6b; }
+
         :root { --accent: #ff6b6b; --dark: #111; }
         body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
         
@@ -45,57 +58,59 @@ $total = $subtotal + $tax + $shipping;
         </div>
 
         <div class="row">
-            <div class="col-lg-8">
-                <div class="cart-container">
-                    <?php if (!empty($_SESSION['cart'])): ?>
-                        <?php foreach ($_SESSION['cart'] as $index => $item): ?>
-                            <div class="cart-item">
-                                <img src="<?= htmlspecialchars($item['image']) ?>" width="110" class="me-4 rounded shadow-sm">
-                                <div class="flex-grow-1">
-                                    <h5 class="fw-bold mb-2"><?= htmlspecialchars($item['name']) ?></h5>
-                                    
-                                    <div class="mb-3 d-flex align-items-center">
-                                        <small class="text-muted me-2">Color:</small>
-                                        <select class="form-select form-select-sm w-auto" onchange="updateCart(<?= $index ?>, 'color', this.value)">
-                                            <?php 
-                                            
-                                            $colors = ['black', 'red', 'white', 'blue', 'grey', 'silver'];
-                                            foreach($colors as $c): 
-                                               
-                                                $isSelected = ($item['colors'] == $c || ($item['colors'] == "rgb(0, 0, 0)" && $c == 'black')) ? 'selected' : '';
-                                            ?>
-                                                <option value="<?= $c ?>" <?= $isSelected ?>><?= ucfirst($c) ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-
-                                   <div class="input-group input-group-sm" style="width: 120px;">
-    <button class="btn btn-outline-dark" 
-            onclick="updateCart(<?= $index ?>, 'quantity', <?= $item['quantity'] - 1 ?>)">
-        <i class="fas fa-minus"></i>
-    </button>
-    
-    <input type="text" class="form-control text-center fw-bold" value="<?= $item['quantity'] ?>" readonly>
-    
-    <button class="btn btn-outline-dark" 
-            onclick="updateCart(<?= $index ?>, 'quantity', <?= $item['quantity'] + 1 ?>)">
-        <i class="fas fa-plus"></i>
-    </button>
-</div>
-
-<button class="btn btn-link text-danger text-decoration-none small mt-2" 
-        onclick="updateCart(<?= $index ?>, 'remove', 0)">
-    <i class="fas fa-trash-alt me-1"></i> Remove Item
-</button>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="text-center py-5">
-                            <i class="fas fa-box-open fa-3x text-light mb-3"></i>
-                            <p class="text-muted fs-5">Your cart is currently empty.</p>
+          <div class="col-lg-8">
+    <div class="cart-container">
+        <?php if (!empty($_SESSION['cart'])): ?>
+            <?php foreach ($_SESSION['cart'] as $index => $item): ?>
+                <div class="cart-item">
+                    <img src="<?= htmlspecialchars($item['image'] ?? 'placeholder.jpg') ?>" width="110" class="me-4 rounded shadow-sm">
+                    
+                    <div class="flex-grow-1">
+                        <h5 class="fw-bold mb-2"><?= htmlspecialchars($item['name'] ?? 'Unknown Product') ?></h5>
+                        
+                        <div class="mb-3 d-flex align-items-center">
+                            <small class="text-muted me-2">Color:</small>
+                            <select class="form-select form-select-sm w-auto" onchange="updateCart(<?= $index ?>, 'color', this.value)">
+                                <?php 
+                                $colors = ['black', 'red', 'white', 'blue', 'grey', 'silver'];
+                                // 3. 确保 colors 键名存在
+                                $currentColor = $item['colors'] ?? 'black';
+                                foreach($colors as $c): 
+                                    $isSelected = ($currentColor == $c) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= $c ?>" <?= $isSelected ?>><?= ucfirst($c) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                    <?php endif; ?>
+
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <button class="btn btn-outline-dark" onclick="updateCart(<?= $index ?>, 'quantity', <?= $item['quantity'] - 1 ?>)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="text" class="form-control text-center fw-bold" value="<?= $item['quantity'] ?>" readonly>
+                                <button class="btn btn-outline-dark" onclick="updateCart(<?= $index ?>, 'quantity', <?= $item['quantity'] + 1 ?>)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="text-end">
+                                <span class="text-muted small">Price: RM <?= number_format($item['price'], 2) ?></span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-link text-danger text-decoration-none small mt-2 p-0" onclick="updateCart(<?= $index ?>, 'remove', 0)">
+                            <i class="fas fa-trash-alt me-1"></i> Remove Item
+                        </button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-light mb-3"></i>
+                <p class="text-muted fs-5">Your cart is currently empty.</p>
+            </div>
+                   <?php endif; ?>
                 </div>
             </div>
 

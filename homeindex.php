@@ -4,12 +4,12 @@ require_once 'Minionshoesconfig.php';
 include 'homeheader.php';
 
 // 1. Fetch products from the 'products' table
-$sql = "SELECT * FROM products ORDER BY id DESC LIMIT 4";
+$sql = "SELECT * FROM allproducts ORDER BY id DESC LIMIT 4";
 $result = $conn->query($sql);
 
 // 2. Check for SQL errors
 if (!$result) {
-    die("Query Failed: " . $conn->error);
+    die("Query Failed: " . $conn->$error);
 }
 ?>
 <style>
@@ -63,9 +63,8 @@ if (!$result) {
                     <div class="card-details">
                         <span class="category"><?php echo htmlspecialchars($product['category']); ?></span>
                         <h4><?php echo htmlspecialchars($product['product_name']); ?></h4>
-                        <span class="price">$<?php echo number_format($product['price'], 2); ?></span>
-                        <a href="product_details.php?id=<?php echo $product['id']; ?>">
-                            <button class="btn-card">View Details</button>
+                        <span class="price">RM<?php echo number_format($product['price'], 2); ?></span>
+                        
                         </a>
                     </div>
                 </div>

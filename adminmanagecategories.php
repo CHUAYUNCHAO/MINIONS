@@ -8,7 +8,7 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     // Prepare statement for security
-    $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM allproducts WHERE id = ?");
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
         header("Location: adminmanagecategories.php?status=deleted");

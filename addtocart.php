@@ -6,8 +6,8 @@ require_once('Minionshoesconfig.php');
 if (isset($_GET['id'])) {
     $productId = intval($_GET['id']);
 
-    // Fetch details from 'catelog' table
-    $stmt = $conn->prepare("SELECT * FROM catelog WHERE id = ?");
+    
+    $stmt = $conn->prepare("SELECT * FROM allproducts WHERE id = ?");
     $stmt->bind_param("i", $productId);
     $stmt->execute();
     $product = $stmt->get_result()->fetch_assoc();
@@ -27,15 +27,16 @@ if (isset($_GET['id'])) {
         }
 
         if (!$found) {
+            
             $_SESSION['cart'][] = [
                 'id' => $product['id'],
-                'name' => $product['name'],
-                'price' => $product['price'],
-                'image' => $product['image_url'],
+                'name' => $product['name'], 
+                'price' => floatval($product['price']), 
+                'image' => $product['image_url'], 
                 'quantity' => 1,
-                'category' => $product['category_group']
+                'colors' => 'black', 
+                'category' => $product['category']
             ];
-        
         }
 
         echo json_encode(['success' => true]);

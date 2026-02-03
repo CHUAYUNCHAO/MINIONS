@@ -5,7 +5,7 @@ $conn = new mysqli("localhost", "root", "", "minion_shoe_db");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
 // 2. Fetch Products
-$query = "SELECT * FROM productsdetail ORDER BY id DESC";
+$query = "SELECT * FROM allproducts ORDER BY id DESC";
 $result = $conn->query($query);
 $products = [];
 while($row = $result->fetch_assoc()) {

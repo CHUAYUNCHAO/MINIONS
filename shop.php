@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once('catelogue.php');
-$products = $conn->query("SELECT * FROM products ORDER BY id DESC");
+$products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +20,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC");
 <body>
     <header style="display: flex; justify-content: space-between; padding: 20px 40px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
         <div style="font-weight: 800; font-size: 1.5rem;">🍌 MINION SHOE</div>
-        <nav><a href="user_dashboard.php" class="me-3">Dashboard</a><a href="cart.php">🛒 Cart</a></nav>
+        <nav><a href="profile.php" class="me-3">Dashboard</a><a href="cart.php">🛒 Cart</a></nav>
     </header>
 
     <div class="container mt-4">

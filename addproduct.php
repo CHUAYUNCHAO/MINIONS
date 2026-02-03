@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // SQL to insert the new shoe
     // Fixed bind_param: "sdis" (string, double, integer, string, string) matches the 5 variables
-    $stmt = $conn->prepare("INSERT INTO products (product_name, price, stock, category, image_url, sku) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO allproducts (product_name, price, stock, category, image_url, sku) VALUES (?, ?, ?, ?, ?, ?)");
     
     // Assuming you have an 'sku' column. If not, remove the 'sku' from query and types.
     // Types: s=string, d=double(price), i=int(stock), s=string, s=string, s=string

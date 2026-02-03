@@ -3,7 +3,7 @@ session_start();
 require_once('Minionshoesconfig.php');
 
 // Fetch all products from 'catelog' table
-$query = "SELECT * FROM catelog ORDER BY id DESC";
+$query = "SELECT * FROM allproducts ORDER BY id DESC";
 $result = $conn->query($query);
 $products = [];
 while($row = $result->fetch_assoc()) {
@@ -18,6 +18,17 @@ while($row = $result->fetch_assoc()) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f9f9f9; color: #333; line-height: 1.6; }
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #111; }
+        nav { display: flex; gap: 25px; }
+        nav a { font-weight: 600; color: #555; font-size: 0.95rem; }
+        nav a:hover { color: #ff6b6b; }
+        .nav-icons { display: flex; gap: 15px; align-items: center; }
+        .btn-login, .btn-admin { background-color: #111; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; }
+        .btn-login:hover, .btn-admin:hover { background-color: #ff6b6b; }
         :root { --accent-color: #ff6b6b; --primary-color: #111; }
         header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; padding: 20px; }
@@ -27,7 +38,7 @@ while($row = $result->fetch_assoc()) {
         .card-image img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
         .btn-add { width: 100%; padding: 10px; border: 2px solid var(--primary-color); background: transparent; font-weight: 700; transition: 0.3s; }
         .btn-add:hover { background: var(--primary-color); color: white; }
-        nav a { color: black; text-decoration: none; margin: 15px; font-weight: bold;}
+        nav a { color: black; text-decoration: none; margin: 15px;font-weight: bold;}
     </style>
 </head>
 <body>
@@ -53,8 +64,8 @@ while($row = $result->fetch_assoc()) {
                         <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="Shoe">
                     </div>
                     <div class="p-3">
-                        <small class="text-muted text-uppercase fw-bold"><?= htmlspecialchars($p['category_group']) ?></small>
-                        <h4 class="h6 fw-bold"><?= htmlspecialchars($p['name']) ?></h4>
+                        <small class="text-muted text-uppercase fw-bold"><?= htmlspecialchars($p['category']) ?></small>
+                        <h4 class="h6 fw-bold"><?= htmlspecialchars($p['product_name']) ?></h4>
                         <p class="text-danger fw-bold">RM <?= number_format($p['price'], 2) ?></p>
                         <button class="btn-add" onclick="addToCart(<?= $p['id'] ?>)">Add to Cart</button>
                     </div>

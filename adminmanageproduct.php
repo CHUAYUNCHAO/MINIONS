@@ -7,13 +7,13 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 // 2. Handle DELETE Request - FIX: Redirect to THIS file, not categories
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
-    $conn->query("DELETE FROM products WHERE id = $id");
+    $conn->query("DELETE FROM allproducts WHERE id = $id");
     header("Location: adminmanageproduct.php?status=deleted"); // Fixed path
     exit();
 }
 
 // 3. Fetch All Products
-$products = $conn->query("SELECT * FROM products ORDER BY id DESC");
+$products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>

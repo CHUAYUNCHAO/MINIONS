@@ -35,6 +35,7 @@ if (isset($_GET['id'])) {
                 'quantity' => 1,
                 'category' => $product['category_group']
             ];
+        
         }
 
         echo json_encode(['success' => true]);

@@ -9,8 +9,9 @@ if (isset($_GET['update_id']) && isset($_GET['new_status'])) {
     $id = intval($_GET['update_id']);
     $status = $conn->real_escape_string($_GET['new_status']);
     $conn->query("UPDATE orders SET status = '$status' WHERE order_id = $id");
-    // Redirect with a success flag
-    header("Location: manage_orders.php?status_updated=1");
+    
+    // FIXED: Redirect back to this same file (adminorders.php)
+    header("Location: adminorders.php?status_updated=1");
     exit();
 }
 
@@ -33,7 +34,7 @@ $ordersResult = $conn->query($sql);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Manage Orders | ShoeHaven</title>
+    <title>Admin - Manage Orders | Minion Shoe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -133,10 +134,10 @@ $ordersResult = $conn->query($sql);
         </div>
 
         <div class="d-flex mb-3 flex-wrap gap-2">
-            <a href="manage_orders.php?filter=All" class="filter-btn <?php echo $filter == 'All' ? 'active' : ''; ?>">All Orders</a>
-            <a href="manage_orders.php?filter=Pending" class="filter-btn <?php echo $filter == 'Pending' ? 'active' : ''; ?>">Pending</a>
-            <a href="manage_orders.php?filter=Shipped" class="filter-btn <?php echo $filter == 'Shipped' ? 'active' : ''; ?>">Shipped</a>
-            <a href="manage_orders.php?filter=Cancelled" class="filter-btn <?php echo $filter == 'Cancelled' ? 'active' : ''; ?>">Cancelled</a>
+            <a href="adminorders.php?filter=All" class="filter-btn <?php echo $filter == 'All' ? 'active' : ''; ?>">All Orders</a>
+            <a href="adminorders.php?filter=Pending" class="filter-btn <?php echo $filter == 'Pending' ? 'active' : ''; ?>">Pending</a>
+            <a href="adminorders.php?filter=Shipped" class="filter-btn <?php echo $filter == 'Shipped' ? 'active' : ''; ?>">Shipped</a>
+            <a href="adminorders.php?filter=Cancelled" class="filter-btn <?php echo $filter == 'Cancelled' ? 'active' : ''; ?>">Cancelled</a>
         </div>
 
         <div class="table-container">
@@ -180,8 +181,8 @@ $ordersResult = $conn->query($sql);
                                 </button>
                                 
                                 <?php if($order['status'] == 'Pending'): ?>
-                                    <a href="manage_orders.php?update_id=<?php echo $order['order_id']; ?>&new_status=Shipped" class="btn-action btn-ship"><i class="fas fa-shipping-fast"></i></a>
-                                    <a href="manage_orders.php?update_id=<?php echo $order['order_id']; ?>&new_status=Cancelled" class="btn-action btn-cancel" onclick="return confirm('Cancel this order?')"><i class="fas fa-times"></i></a>
+                                    <a href="adminorders.php?update_id=<?php echo $order['order_id']; ?>&new_status=Shipped" class="btn-action btn-ship"><i class="fas fa-shipping-fast"></i></a>
+                                    <a href="adminorders.php?update_id=<?php echo $order['order_id']; ?>&new_status=Cancelled" class="btn-action btn-cancel" onclick="return confirm('Cancel this order?')"><i class="fas fa-times"></i></a>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -237,19 +238,15 @@ $ordersResult = $conn->query($sql);
 
     <script>
         // --- A. Handle Toast Notification ---
-        // Check if URL has ?status_updated=1
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('status_updated')) {
             const toast = document.getElementById('toast');
-            // Show the toast
             setTimeout(() => {
                 toast.classList.add('show');
-            }, 500); // Small delay for smooth entrance
+            }, 500); 
 
-            // Hide after 3 seconds
             setTimeout(() => {
                 toast.classList.remove('show');
-                // Clean up URL (optional)
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.pushState({path:newUrl},'',newUrl);
             }, 3500);
@@ -257,22 +254,19 @@ $ordersResult = $conn->query($sql);
 
         // --- B. Handle View Order Modal ---
         function viewOrder(orderId, customerName, status, total) {
-            // Update Modal Content
             document.getElementById('modalOrderId').innerText = orderId;
             document.getElementById('modalCustomer').innerText = customerName;
             document.getElementById('modalTotal').innerText = 'RM ' + total;
             
-            // Handle Status Badge Color in Modal
             const statusBadge = document.getElementById('modalStatus');
             statusBadge.innerText = status;
-            statusBadge.className = 'badge'; // Reset classes
+            statusBadge.className = 'badge'; 
             
             if(status === 'Pending') statusBadge.classList.add('bg-warning', 'text-dark');
             else if(status === 'Shipped') statusBadge.classList.add('bg-success');
             else if(status === 'Cancelled') statusBadge.classList.add('bg-danger');
             else statusBadge.classList.add('bg-secondary');
 
-            // Show Modal
             const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
             orderModal.show();
         }

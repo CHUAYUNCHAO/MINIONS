@@ -2,28 +2,36 @@
 session_start();
 require_once('Minionshoesconfig.php');
 
-// 1. Calculate Total
-$grandTotal = 0;
+// 1. Calculate Totals (Synchronized with cart.php logic)
+$subtotal = 0;
 if (!empty($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $item) { $grandTotal += $item['price'] * $item['quantity']; }
-} else { header("Location: cart.php"); exit(); }
+    foreach ($_SESSION['cart'] as $item) { 
+        $subtotal += $item['price'] * $item['quantity']; 
+    }
+} else { 
+    header("Location: cart.php"); 
+    exit(); 
+}
+
+// Math logic from cart.php
+$tax = $subtotal * 0.06;
+$shipping = ($subtotal > 200) ? 0 : 15.00;
+$grandTotal = $subtotal + $tax + $shipping;
 
 // 2. Process Order
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // FIX: Using standardized variable names
     $customer_name = htmlspecialchars($_POST['name']); 
-    $customer_email = $_SESSION['email'] ?? 'guest@example.com'; // Pulled from session
+    $customer_email = $_SESSION['email'] ?? 'guest@example.com';
     $address = htmlspecialchars($_POST['address']);
     $payment = $_POST['payment'];
 
-    // FIX: Matches your image_0f6a45.png columns
+    // INSERT includes the final grand total (Price + Tax + Shipping)
     $stmt = $conn->prepare("INSERT INTO orders (customer_name, customer_email, total_amount, shipping_address, payment_method) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("ssdss", $customer_name, $customer_email, $grandTotal, $address, $payment);
     
     if ($stmt->execute()) {
-        $order_id = $conn->insert_id; // Capture generated ID
+        $order_id = $conn->insert_id;
 
-        // Move individual items to order_details
         foreach ($_SESSION['cart'] as $item) {
             $det_stmt = $conn->prepare("INSERT INTO order_details (order_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
             $det_stmt->bind_param("iiid", $order_id, $item['id'], $item['quantity'], $item['price']);
@@ -79,4 +87,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 </body>
+
 </html>

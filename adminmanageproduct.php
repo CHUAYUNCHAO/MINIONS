@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 // 1. Database Connection
 $conn = new mysqli("localhost", "root", "", "minion_shoe_db");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
@@ -7,6 +8,19 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 // 2. Handle DELETE Request
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
+    
+    // Optional: Fetch image path to delete the physical file if it exists
+    $stmt = $conn->prepare("SELECT image_url FROM allproducts WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if($row = $res->fetch_assoc()) {
+        // Only delete if it is a local file (starts with uploads/)
+        if (strpos($row['image_url'], 'uploads/') === 0 && file_exists($row['image_url'])) {
+            unlink($row['image_url']);
+        }
+    }
+
     $conn->query("DELETE FROM allproducts WHERE id = $id");
     header("Location: adminmanageproduct.php?status=deleted");
     exit();
@@ -26,7 +40,7 @@ $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; overflow-x: hidden; }
         
-        /* Sidebar (FIXED) */
+        /* Sidebar */
         .sidebar { 
             width: 260px; 
             background-color: #1a1a1a; 
@@ -35,7 +49,6 @@ $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
             position: fixed; 
             padding: 20px; 
             z-index: 100;
-            /* These lines push the Logout button to the bottom */
             display: flex;
             flex-direction: column; 
         }
@@ -67,7 +80,17 @@ $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
         
         /* Product Visuals */
         .product-flex { display: flex; align-items: center; gap: 15px; }
-        .product-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #f0f0f0; border: 1px solid #eee; }
+        
+        /* UPDATED: Image Style */
+        .product-img { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            background: #f0f0f0; 
+            border: 1px solid #eee; 
+        }
+        
         .product-name { font-weight: 700; color: #333; display: block; }
         .product-sku { font-size: 0.8rem; color: #888; }
         
@@ -102,7 +125,7 @@ $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
             <a href="adminorders.php"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
         </div>
         
-        <a href="adminlogin.php" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+        <a href="custloginandregister.php" style="margin-top: auto;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <div class="main-content">
@@ -151,11 +174,18 @@ $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
                         if($stock == 0) { $color = '#dc3545'; $badge = 'Out of Stock'; $bg = '#f8d7da'; }
                         elseif($stock < 10) { $color = '#ffc107'; $badge = 'Low Stock'; $bg = '#fff3cd'; }
                         else { $color = '#198754'; $badge = 'In Stock'; $bg = '#d1e7dd'; }
+
+                        // Check Image: Use placeholder if empty
+                        $imgSrc = !empty($row['image_url']) ? $row['image_url'] : 'https://via.placeholder.com/50';
                     ?>
                     <tr>
                         <td>
                             <div class="product-flex">
-                                <img src="<?php echo htmlspecialchars($row['image_url']); ?>" class="product-img" alt="Shoe">
+                                <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
+                                     class="product-img" 
+                                     alt="Shoe"
+                                     onerror="this.onerror=null;this.src='https://via.placeholder.com/50?text=No+Img';">
+                                
                                 <div>
                                     <span class="product-name"><?php echo htmlspecialchars($row['product_name']); ?></span>
                                     <span class="product-sku">#ID-<?php echo $row['id']; ?></span>

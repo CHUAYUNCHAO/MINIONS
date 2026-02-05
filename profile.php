@@ -10,220 +10,268 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $user_email = $_SESSION['email'] ?? ''; 
-$message = ""; // Variable to store success/error messages
+$message = "";
+$msg_type = "";
 
-// --- NEW: Handle Profile Update Logic ---
+// 2. Handle Profile Update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $new_name = $conn->real_escape_string($_POST['full_name']);
+    $new_email = $conn->real_escape_string($_POST['email']); // Allow email update
     $new_password = $_POST['password'];
 
-    // Update Query
+    // Dynamic Query Construction
+    $updates = ["full_name = '$new_name'", "email = '$new_email'"];
+    
     if (!empty($new_password)) {
-        // Note: In a real app, you should hash passwords using password_hash()
-        $sql = "UPDATE registerusers SET full_name = '$new_name', password = '$new_password' WHERE id = $user_id";
-    } else {
-        // If password field is empty, only update the name
-        $sql = "UPDATE registerusers SET full_name = '$new_name' WHERE id = $user_id";
+        // ideally use password_hash($new_password, PASSWORD_DEFAULT)
+        $updates[] = "password = '$new_password'"; 
     }
 
+    $sql = "UPDATE registerusers SET " . implode(', ', $updates) . " WHERE id = $user_id";
+
     if ($conn->query($sql)) {
+        $_SESSION['user_name'] = $new_name; // Update session
+        $_SESSION['email'] = $new_email;
         $message = "Profile updated successfully!";
+        $msg_type = "success";
     } else {
         $message = "Error updating profile: " . $conn->error;
+        $msg_type = "danger";
     }
 }
 
-// 2. Fetch User Data (Re-fetch to show updated name immediately)
-$user_res = $conn->query("SELECT full_name FROM registerusers WHERE id = $user_id");
+// 3. Fetch User Data
+$user_res = $conn->query("SELECT * FROM registerusers WHERE id = $user_id");
 $user_data = $user_res->fetch_assoc();
 
-// 3. Get Stats (Total Orders & Pending)
+// 4. Get Stats
 $stats_res = $conn->query("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending FROM orders WHERE customer_email = '$user_email'");
 $stats = $stats_res->fetch_assoc();
 
-// 4. Recent Orders
-$recent_orders = $conn->query("SELECT * FROM orders WHERE customer_email = '$user_email' ORDER BY order_date DESC LIMIT 5");
+// 5. Fetch ALL Orders (for the Orders tab)
+$orders_res = $conn->query("SELECT * FROM orders WHERE customer_email = '$user_email' ORDER BY order_date DESC");
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Account | Minion Shoe</title>
+    <title>My Profile | Minion Shoe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --accent: wheat; --dark: #111; --glass: rgba(255, 255, 255, 0.9); }
+        :root { --accent: wheat; --dark: #111; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; overflow-x: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--dark); min-height: 100vh; position: fixed; padding: 30px 20px; z-index: 100; transition: 0.3s; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 50px; text-align: center; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        .nav-link { color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 10px; margin-bottom: 5px; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 15px; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+        .nav-link.active { border-left: 4px solid var(--accent); }
+        .nav-link i { width: 20px; text-align: center; }
+
+        /* Main Content */
+        .main-content { margin-left: 260px; padding: 40px; transition: 0.3s; }
         
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; background: #f0f2f5; color: #333; }
+        /* Header Card */
+        .profile-header { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 30px; margin-bottom: 30px; position: relative; overflow: hidden; }
+        .avatar-circle { width: 100px; height: 100px; background: var(--dark); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; }
+        .profile-info h1 { font-weight: 800; font-size: 2rem; margin: 0; }
+        .btn-edit { position: absolute; top: 30px; right: 30px; background: #f8f9fa; border: none; padding: 10px 20px; border-radius: 30px; font-weight: 600; transition: 0.2s; color: #555; }
+        .btn-edit:hover { background: var(--dark); color: white; }
 
-        /* --- Glass Sidebar --- */
-        .sidebar { width: 280px; background: var(--dark); color: white; padding: 40px 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
-        .brand { font-size: 1.8rem; font-weight: 900; color: var(--accent); margin-bottom: 50px; text-align: center; letter-spacing: -1px; }
-        .sidebar a { text-decoration: none; color: #888; padding: 15px 20px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 15px; font-weight: 600; transition: 0.3s; }
-        .sidebar a:hover, .sidebar a.active { background: rgba(255, 107, 107, 0.1); color: white; }
-        .sidebar a.active { border-left: 5px solid var(--accent); color: var(--accent); }
+        /* Stats Cards */
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.02); border-bottom: 4px solid transparent; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card.blue { border-color: #4facfe; }
+        .stat-card.orange { border-color: #ffa502; }
+        .stat-card.green { border-color: #2ecc71; }
+        .stat-value { font-size: 2rem; font-weight: 800; display: block; margin-top: 10px; }
+        .stat-label { color: #888; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
 
-        /* --- Content Area --- */
-        .main { flex: 1; padding: 50px; overflow-y: auto; }
-        .welcome-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .btn-shop { background: var(--dark); color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: 700; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .btn-shop:hover { background: var(--accent); transform: translateY(-2px); color: #111; }
-
-        /* --- Hero Stats Grid --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 50px; }
-        .stat-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); position: relative; overflow: hidden; }
-        .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: var(--dark); }
-        .stat-card.prime::after { background: var(--accent); }
-        .stat-card h4 { margin: 0; font-size: 0.85rem; color: #999; text-transform: uppercase; letter-spacing: 1.5px; }
-        .stat-card .value { font-size: 2.5rem; font-weight: 900; margin-top: 15px; display: block; }
-
-        /* --- Order Table --- */
-        .order-section { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .section-header { font-size: 1.4rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 20px; color: #bbb; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        td { padding: 20px; border-top: 1px solid #f8f8f8; font-weight: 500; }
+        /* Tabs & Table */
+        .nav-tabs { border-bottom: none; gap: 15px; margin-bottom: 20px; }
+        .nav-tabs .nav-link { background: white; border: none; border-radius: 30px; padding: 10px 25px; color: #555; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .nav-tabs .nav-link.active { background: var(--dark); color: white; }
         
-        .badge { padding: 6px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-        .status-pending { background: #fff4e5; color: #ff9800; }
-        .status-shipped { background: #e8f5e9; color: #4caf50; }
+        .table-custom { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.02); }
+        .table-custom th { background: #fafafa; padding: 20px; font-weight: 700; color: #666; border-bottom: 1px solid #eee; }
+        .table-custom td { padding: 20px; vertical-align: middle; border-bottom: 1px solid #f9f9f9; }
+        .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-shipped { background: #d1e7dd; color: #0f5132; }
+        .status-cancelled { background: #f8d7da; color: #842029; }
 
-        /* --- NEW: Modal Styles --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: white; padding: 30px; border-radius: 15px; width: 400px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease; }
-        .modal-box h2 { margin-top: 0; margin-bottom: 20px; color: var(--dark); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-save { width: 100%; background: var(--dark); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-save:hover { background: var(--accent); color: #111; }
-        .btn-close { background: transparent; border: none; float: right; font-size: 1.5rem; cursor: pointer; }
-        
-        .edit-icon { cursor: pointer; color: #999; font-size: 1rem; margin-left: 10px; transition: 0.2s; }
-        .edit-icon:hover { color: var(--dark); }
-        
-        .alert { padding: 15px; background: #d4edda; color: #155724; border-radius: 8px; margin-bottom: 20px; }
+        /* Modal */
+        .modal-content { border-radius: 20px; border: none; }
+        .modal-header { border-bottom: 1px solid #eee; padding: 20px 30px; }
+        .modal-body { padding: 30px; }
+        .form-control { padding: 12px; border-radius: 10px; border: 1px solid #eee; background: #f9f9f9; }
+        .form-control:focus { background: white; box-shadow: none; border-color: var(--dark); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .sidebar.active { transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
+
     <div class="sidebar">
-        <div class="brand">🍌 MINION SHOE</div>
-        <a href="homeindex.php" ><i class="fas fa-th-home"></i> Home</a>
-        <a href="profile.php"><i class="fas fa-th-large"></i> Dashboard</a>
-        <a href="catelouge.php"><i class="fas fa-shopping-bag"></i> Shop Now</a>
-        <a href="profile.php"><i class="fas fa-user"></i> My Profile</a>
-        <a href="logout.php" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <div class="brand">🍌 MINION <span>SHOE</span></div>
+        <nav class="nav flex-column">
+            <a href="homeindex.php" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="#" class="nav-link active"><i class="fas fa-user-circle"></i> My Profile</a>
+            <a href="catelouge.php" class="nav-link"><i class="fas fa-shopping-bag"></i> Shop</a>
+            <a href="cart.php" class="nav-link"><i class="fas fa-shopping-cart"></i> Cart</a>
+            <a href="logout.php" class="nav-link mt-5 text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
     </div>
 
-    <div class="main">
+    <div class="main-content">
+        
         <?php if ($message): ?>
-            <div class="alert"><?= $message; ?></div>
+            <div class="alert alert-<?= $msg_type ?> alert-dismissible fade show" role="alert">
+                <?= $message ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
-        <div class="welcome-header">
-            <div>
-                <h1 style="margin:0; font-weight:900; font-size: 2.5rem;">
-                    Hi, <?= htmlspecialchars($user_data['full_name']); ?>! 
-                    <i class="fas fa-pen edit-icon" onclick="openModal()" title="Edit Profile"></i>
-                </h1>
-                <p style="color: #888; margin-top: 10px;">Check your orders and manage your premium kicks.</p>
+        <div class="profile-header">
+            <div class="avatar-circle">
+                <?= strtoupper(substr($user_data['full_name'], 0, 1)) ?>
             </div>
-            <a href="catelouge.php" class="btn-shop">Explore Collection</a>
+            <div class="profile-info">
+                <small class="text-muted text-uppercase fw-bold">Welcome back,</small>
+                <h1><?= htmlspecialchars($user_data['full_name']) ?></h1>
+                <p class="text-muted mb-0"><i class="far fa-envelope me-2"></i><?= htmlspecialchars($user_data['email']) ?></p>
+            </div>
+            <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-pen me-2"></i> Edit Profile
+            </button>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card prime">
-                <h4>Total Orders</h4>
-                <span class="value"><?= $stats['total'] ?? 0; ?></span>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card blue">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value"><?= $stats['total'] ?? 0 ?></span>
+                </div>
             </div>
-            <div class="stat-card">
-                <h4>Pending Delivery</h4>
-                <span class="value"><?= $stats['pending'] ?? 0; ?></span>
+            <div class="col-md-4">
+                <div class="stat-card orange">
+                    <span class="stat-label">Pending Delivery</span>
+                    <span class="stat-value"><?= $stats['pending'] ?? 0 ?></span>
+                </div>
             </div>
-            <div class="stat-card">
-                <h4>Wallet Points</h4>
-                <span class="value">RM 0.00</span>
+            <div class="col-md-4">
+                <div class="stat-card green">
+                    <span class="stat-label">Loyalty Points</span>
+                    <span class="stat-value">0</span> </div>
             </div>
         </div>
 
-        <div class="order-section">
-            <div class="section-header"><i class="fas fa-history" style="color: var(--accent);"></i> Recent Purchases</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order Ref</th>
-                        <th>Purchase Date</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($recent_orders->num_rows > 0): ?>
-                        <?php while($order = $recent_orders->fetch_assoc()): ?>
-                        <tr>
-                            <td style="font-weight: 800;">#ORD-<?= $order['order_id'] ?></td>
-                            <td style="color: #777;"><?= date('M d, Y', strtotime($order['order_date'])) ?></td>
-                            <td style="font-weight: 700;">RM <?= number_format($order['total_amount'], 2) ?></td>
-                            <td>
-                                <span class="badge status-<?= strtolower($order['status']) ?>">
-                                    <?= $order['status'] ?>
-                                </span>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="4" style="text-align: center; padding: 50px; color: #ccc;">
-                                <i class="fas fa-box-open fa-3x d-block mb-3"></i>
-                                No orders yet. Time to get some shoes!
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button">Order History</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button">Account Settings</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            
+            <div class="tab-pane fade show active" id="orders" role="tabpanel">
+                <div class="table-custom">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if ($orders_res->num_rows > 0): ?>
+                                    <?php while($order = $orders_res->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><strong>#ORD-<?= str_pad($order['order_id'], 4, '0', STR_PAD_LEFT) ?></strong></td>
+                                        <td><?= date('M d, Y', strtotime($order['order_date'])) ?></td>
+                                        <td>RM <?= number_format($order['total_amount'], 2) ?></td>
+                                        <td>
+                                            <span class="badge-status status-<?= strtolower($order['status']) ?>">
+                                                <?= $order['status'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-light border" onclick="alert('Order Details feature coming soon!')">View</button>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-box-open fa-2x mb-3 d-block"></i> No orders found.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 15px;">
+                    <h5 class="fw-bold mb-4">Security Settings</h5>
+                    <p class="text-muted">Two-factor authentication is currently disabled.</p>
+                    <button class="btn btn-outline-dark">Enable 2FA</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-box">
-            <button class="btn-close" onclick="closeModal()">&times;</button>
-            <h2>Edit Profile</h2>
-            <form method="POST" action="">
-                <input type="hidden" name="update_profile" value="1">
-                
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" name="full_name" value="<?= htmlspecialchars($user_data['full_name']); ?>" required>
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Edit Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+                <div class="modal-body">
+                    <form method="POST">
+                        <input type="hidden" name="update_profile" value="1">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($user_data['full_name']) ?>" required>
+                        </div>
 
-                <div class="form-group">
-                    <label>New Password <small>(Leave blank to keep current)</small></label>
-                    <input type="password" name="password" placeholder="••••••••">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user_data['email']) ?>" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">New Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 py-2 fw-bold">Save Changes</button>
+                    </form>
                 </div>
-
-                <button type="submit" class="btn-save">Update Profile</button>
-            </form>
+            </div>
         </div>
     </div>
 
-    <script>
-        function openModal() {
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        // Close modal if clicked outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

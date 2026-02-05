@@ -9,8 +9,8 @@ $query = "SELECT * FROM allproducts ORDER BY id DESC";
 $result = $conn->query($query);
 $products = [];
 while($row = $result->fetch_assoc()) {
-    $row['sizes'] = explode(',', $row['sizes'] ?? '');
-    $row['colors'] = explode(',', $row['colors'] ?? '');
+    $row['sizes'] = !empty($row['sizes']) ? explode(',', $row['sizes']) : ['7','8','9','10','11']; 
+    $row['colors'] = !empty($row['colors']) ? explode(',', $row['colors']) : ['#000','#fff']; 
     $products[] = $row;
 }
 ?>
@@ -24,87 +24,126 @@ while($row = $result->fetch_assoc()) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --dark: #111; --accent: #ff6b6b; --grey: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: white; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #fafafa; padding-bottom: 50px; }
         
-        /* Navigation & Header */
-        .custom-header { background: linear-gradient(135deg, #111, #333); color: white; padding: 3rem 2rem; text-align: center; border-radius: 0 0 20px 20px; }
-        nav { margin-top: 20px; }
-        nav a { color: rgba(255,255,255,0.7); margin: 0 15px; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        nav a:hover, nav a.active { color: white; }
+        /* Header */
+        .custom-header { background: #111; color: white; padding: 4rem 2rem; text-align: center; margin-bottom: 30px; }
+        .custom-header h1 { font-weight: 900; letter-spacing: -1px; }
+        .nav-links a { color: #888; text-decoration: none; margin: 0 15px; font-weight: 600; transition: 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+
+        /* Toolbar */
+        .toolbar { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); margin-bottom: 40px; }
+        .filter-btn { border: none; background: none; font-weight: 700; color: #555; padding: 8px 15px; border-radius: 20px; transition: 0.3s; }
+        .filter-btn:hover, .filter-btn.active { background: var(--dark); color: white; }
+        .search-input { border-radius: 20px; border: 1px solid #eee; background: #f9f9f9; padding: 10px 20px; }
 
         /* Product Cards */
-        .shoe-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: 0.3s; height: 100%; display: flex; flex-direction: column; border: 1px solid #eee; }
-        .shoe-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        .img-wrapper { height: 220px; background: var(--grey); display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .img-wrapper img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+        .shoe-card { background: white; border-radius: 15px; overflow: hidden; transition: 0.3s; border: 1px solid #eee; position: relative; }
+        .shoe-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--accent); }
+        .img-wrapper { height: 250px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; }
+        .img-wrapper img { max-width: 90%; max-height: 90%; object-fit: contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); transition: 0.3s; }
+        .shoe-card:hover .img-wrapper img { transform: scale(1.05); }
+        
+        .badge-cat { position: absolute; top: 15px; left: 15px; background: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
         .shoe-body { padding: 20px; }
+        .shoe-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .price-tag { color: var(--accent); font-weight: 800; font-size: 1.2rem; }
-        .btn-view { width: 100%; padding: 10px; background: transparent; border: 2px solid var(--dark); font-weight: bold; border-radius: 6px; transition: 0.3s; margin-top: 15px; }
-        .btn-view:hover { background: var(--dark); color: white; }
+        
+        .btn-view { width: 100%; background: var(--dark); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; margin-top: 15px; transition: 0.3s; }
+        .btn-view:hover { background: var(--accent); }
 
-        /* Detail Modal */
-        .modal-content { border-radius: 20px; border: none; overflow: hidden; }
-        .modal-body { padding: 40px; }
-        .modal-img-box { background: var(--grey); border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; }
-        .size-option { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; margin: 5px; display: inline-block; font-size: 0.85rem; font-weight: 600; color: #666; }
-        .color-option { width: 25px; height: 25px; border-radius: 50%; display: inline-block; margin: 5px; border: 2px solid #eee; }
+        /* Modal */
+        .modal-content { border-radius: 20px; overflow: hidden; border: none; }
+        .modal-img-container { background: #f4f4f4; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 300px; }
+        .size-radio { display: none; }
+        .size-label { cursor: pointer; display: inline-block; width: 40px; height: 40px; line-height: 38px; text-align: center; border: 1px solid #ddd; border-radius: 8px; margin-right: 5px; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+        .size-radio:checked + .size-label { background: var(--dark); color: white; border-color: var(--dark); }
     </style>
 </head>
 <body>
 
     <div class="custom-header">
         <div class="container">
-            <h1 style="font-weight: 900;"><i class="fas fa-shoe-prints"></i> Minion Shoe Gallery</h1>
-            <p>Explore our latest collection with detailed specifications.</p>
-            <nav>
+            <h1>👟 MINION SHOE GALLERY</h1>
+            <p class="text-white-50">Premium kicks for premium minions.</p>
+            <div class="nav-links mt-4">
                 <a href="homeindex.php">Home</a>
                 <a href="catelouge.php">Shop</a>
-                <a href="shoedetail.php" class="active">Detail Gallery</a>
+                <a href="catelouge.php" class="active">Gallery</a>
+                <a href="cart.php">My Cart</a>
                 <a href="aboutus.php">About</a>
-            </nav>
+            </div>
         </div>
     </div>
 
-    <div class="container mt-5">
-        <div class="d-flex justify-content-center gap-2 mb-5">
-            <button class="btn btn-dark rounded-pill px-4" onclick="filterProducts('all')">List</button>
-
+    <div class="container">
+        <div class="toolbar">
+            <div class="row align-items-center g-3">
+                <div class="col-md-6 d-flex gap-2 flex-wrap">
+                    <button class="filter-btn active" onclick="setCategory('all', this)">All</button>
+                    <button class="filter-btn" onclick="setCategory('Men', this)">Men</button>
+                    <button class="filter-btn" onclick="setCategory('Women', this)">Women</button>
+                    <button class="filter-btn" onclick="setCategory('Kids', this)">Kids</button>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select border-0 bg-light rounded-pill" onchange="setSort(this.value)">
+                        <option value="newest">Sort by: Newest</option>
+                        <option value="low-high">Price: Low to High</option>
+                        <option value="high-low">Price: High to Low</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control search-input" placeholder="Search shoes..." onkeyup="setSearch(this.value)">
+                </div>
+            </div>
         </div>
 
-        <div class="row g-4" id="productContainer">
-            </div>
+        <div class="row g-4" id="productContainer"></div>
+        
+        <div id="emptyState" class="text-center py-5 d-none">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No shoes found matching your criteria.</h4>
+        </div>
     </div>
 
     <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-5 mb-4 mb-md-0">
-                            <div class="modal-img-box">
-                                <img id="modalImg" src="" class="img-fluid" alt="Shoe">
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal"></button>
+                    <div class="row g-0">
+                        <div class="col-lg-6">
+                            <div class="modal-img-container">
+                                <img id="modalImg" src="" class="img-fluid" style="max-height: 300px;" alt="Shoe">
                             </div>
                         </div>
-                        <div class="col-md-7">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <small id="modalCat" class="text-muted text-uppercase fw-bold"></small>
-                                    <h2 id="modalName" class="fw-bold mb-2"></h2>
+                        <div class="col-lg-6 p-5">
+                            <div id="addToCartSection">
+                                <input type="hidden" id="modalId">
+                                
+                                <span id="modalCat" class="badge bg-warning text-dark mb-2"></span>
+                                <h2 id="modalName" class="fw-bold mb-2"></h2>
+                                <h3 id="modalPrice" class="price-tag mb-3"></h3>
+                                <p id="modalDesc" class="text-muted mb-4 small"></p>
+
+                                <div class="mb-4">
+                                    <label class="fw-bold d-block mb-2">Select Size</label>
+                                    <div id="modalSizes"></div>
                                 </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input type="number" id="modalQty" class="form-control text-center py-3 rounded-3 fw-bold" value="1" min="1" max="10">
+                                    </div>
+                                    <div class="col-8">
+                                        <button type="button" onclick="triggerAddToCart()" class="btn btn-dark w-100 py-3 rounded-3 fw-bold">
+                                            Add to Cart <i class="fas fa-arrow-right ms-2"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 id="modalPrice" class="price-tag mb-3"></h3>
-                            <p id="modalDesc" class="text-muted small mb-4"></p>
-
-                            <h6 class="fw-bold mb-2">Available Sizes</h6>
-                            <div id="modalSizes" class="mb-4"></div>
-
-                            <h6 class="fw-bold mb-2">Colors</h6>
-                            <div id="modalColors" class="mb-4"></div>
-
-                            <button type="button" class="btn btn-dark w-100 py-3 fw-bold" data-bs-dismiss="modal">
-                                Close Details
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -114,53 +153,131 @@ while($row = $result->fetch_assoc()) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // 1. Data Initialization
         const products = <?= json_encode($products); ?>;
         const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        
+        let state = { category: 'all', search: '', sort: 'newest' };
 
-        function filterProducts(type) {
+        // 2. Render Function
+        function render() {
             const container = document.getElementById('productContainer');
+            const emptyState = document.getElementById('emptyState');
             container.innerHTML = '';
-            const filtered = type === 'all' ? products : products.filter(p => p.group_name === type);
 
-            filtered.forEach(p => {
-                container.innerHTML += `
-                    <div class="col-md-6 col-lg-3">
-                        <div class="shoe-card">
-                            <div class="img-wrapper"><img src="${p.image_url}"></div>
-                            <div class="shoe-body">
-                                <small class="text-muted fw-bold">${p.category}</small>
-                                <h5 class="fw-bold my-1">${p.product_name}</h5>
-                                <div class="price-tag">RM ${parseFloat(p.price).toFixed(2)}</div>
-                                <button class="btn-view" onclick="openModal(${p.id})">
-                                    <i class="far fa-eye me-1"></i> View Details
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
+            let filtered = products.filter(p => {
+                const matchCat = state.category === 'all' || 
+                                 (p.category && p.category.toLowerCase().includes(state.category.toLowerCase()));
+                const matchSearch = p.product_name.toLowerCase().includes(state.search.toLowerCase());
+                return matchCat && matchSearch;
             });
+
+            if (state.sort === 'low-high') {
+                filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else if (state.sort === 'high-low') {
+                filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            } else {
+                filtered.sort((a, b) => b.id - a.id);
+            }
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('d-none');
+            } else {
+                emptyState.classList.add('d-none');
+                filtered.forEach(p => {
+                    container.innerHTML += `
+                        <div class="col-md-6 col-lg-3 animation-fade">
+                            <div class="shoe-card h-100 d-flex flex-column">
+                                <span class="badge-cat">${p.category}</span>
+                                <div class="img-wrapper">
+                                    <img src="${p.image_url}" alt="${p.product_name}">
+                                </div>
+                                <div class="shoe-body flex-grow-1 d-flex flex-column">
+                                    <div class="mb-auto">
+                                        <div class="shoe-title" title="${p.product_name}">${p.product_name}</div>
+                                        <div class="price-tag">RM ${parseFloat(p.price).toFixed(2)}</div>
+                                    </div>
+                                    <button class="btn-view" onclick="openModal(${p.id})">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            }
         }
 
+        // 3. Filter Functions
+        function setCategory(cat, btn) {
+            state.category = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+        function setSearch(val) { state.search = val; render(); }
+        function setSort(val) { state.sort = val; render(); }
+
+        // 4. Modal Logic
         function openModal(id) {
             const p = products.find(item => item.id == id);
+            
             document.getElementById('modalImg').src = p.image_url;
             document.getElementById('modalName').innerText = p.product_name;
             document.getElementById('modalCat').innerText = p.category;
             document.getElementById('modalPrice').innerText = "RM " + parseFloat(p.price).toFixed(2);
-            document.getElementById('modalDesc').innerText = p.description;
+            document.getElementById('modalDesc').innerText = p.description || "No description available.";
+            document.getElementById('modalId').value = p.id;
 
-            document.getElementById('modalSizes').innerHTML = p.sizes.map(s => 
-                `<span class="size-option">${s}</span>`
-            ).join('');
-
-            document.getElementById('modalColors').innerHTML = p.colors.map(c => 
-                `<span class="color-option" style="background:${c.trim()}"></span>`
-            ).join('');
+            // Generate Size Radios
+            const sizeContainer = document.getElementById('modalSizes');
+            if(p.sizes && p.sizes.length > 0) {
+                sizeContainer.innerHTML = p.sizes.map((s, index) => `
+                    <input type="radio" class="size-radio" name="size" id="size-${index}" value="${s}" ${index===0 ? 'checked' : ''}>
+                    <label class="size-label" for="size-${index}">${s}</label>
+                `).join('');
+            } else {
+                sizeContainer.innerHTML = '<p class="text-danger">One Size</p><input type="hidden" name="size" value="Standard">';
+            }
 
             productModal.show();
         }
 
-        // Initial load
-        filterProducts('all');
+        // 5. FIXED: Trigger Add To Cart
+        function triggerAddToCart() {
+            const id = document.getElementById('modalId').value;
+            const qty = document.getElementById('modalQty').value;
+            
+            // Get selected size
+            const sizeInput = document.querySelector('input[name="size"]:checked');
+            const size = sizeInput ? sizeInput.value : 'Standard';
+
+            // Create Form Data to send via POST
+            const formData = new FormData();
+            formData.append('product_id', id);
+            formData.append('quantity', qty);
+            formData.append('size', size);
+
+            // Fetch request to addtocart.php
+            fetch('addtocart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Successfully added to cart!');
+                    productModal.hide(); // Close modal on success
+                } else {
+                    alert('Failed to add to cart. ' + (data.message || ''));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error connecting to server.');
+            });
+        }
+
+        render();
     </script>
 </body>
 </html>

@@ -37,7 +37,9 @@ if (isset($_GET['login_error'])) {
                 <input type="email" name="email" placeholder="Email Address" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <button type="submit">SIGN IN</button>
+                <a href="cust_forgot_password.php" class="forgot-link">Forgot Password?</a>
             </form>
+            
             <p>Are you staff or Admin?<a href="adminlogin.php">Click Me</a></p>
             <p>Not a member? <a href="custregistration.php">Join Us</a></p>
         </div>

@@ -2,7 +2,7 @@
 session_start();
 require_once('Minionshoesconfig.php');
 
-// Fetch all products from 'catelog' table
+// Fetch all products
 $query = "SELECT * FROM allproducts ORDER BY id DESC";
 $result = $conn->query($query);
 $products = [];
@@ -14,77 +14,229 @@ while($row = $result->fetch_assoc()) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shop | Minion Shoe</title>
+    <title>Shop Collection | Minion Shoe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: #f9f9f9; color: #333; line-height: 1.6; }
-        a { text-decoration: none; color: inherit; transition: 0.3s; }
-        header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #111; }
-        nav { display: flex; gap: 25px; }
-        nav a { font-weight: 600; color: #555; font-size: 0.95rem; }
-        nav a:hover { color: #ff6b6b; }
-        .nav-icons { display: flex; gap: 15px; align-items: center; }
-        .btn-login, .btn-admin { background-color: #111; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; }
-        .btn-login:hover, .btn-admin:hover { background-color: #ff6b6b; }
-        :root { --accent-color: #ff6b6b; --primary-color: #111; }
-        header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; padding: 20px; }
-        .product-card { background: white; border-radius: 8px; overflow: hidden; transition: 0.3s; border: 1px solid #f0f0f0; }
-        .product-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        .card-image { height: 250px; background-color: #f8f8f8; display: flex; align-items: center; justify-content: center; }
-        .card-image img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
-        .btn-add { width: 100%; padding: 10px; border: 2px solid var(--primary-color); background: transparent; font-weight: 700; transition: 0.3s; }
-        .btn-add:hover { background: var(--primary-color); color: white; }
-        nav a { color: black; text-decoration: none; margin: 15px;font-weight: bold;}
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; color: #333; }
+        
+        /* Header */
+        header { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; color: #111; }
+        nav { display: flex; gap: 20px; }
+        nav a { font-weight: 600; color: #555; text-decoration: none; transition: 0.3s; }
+        nav a:hover, nav a.active { color: #ff6b6b; }
+        
+        /* Shop Layout */
+        .shop-container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        
+        /* Sidebar Filter */
+        .filter-sidebar { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); height: fit-content; }
+        .filter-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .filter-group { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .filter-group:last-child { border-bottom: none; }
+        .filter-group label { display: block; margin-bottom: 10px; cursor: pointer; color: #555; font-weight: 500; }
+        .filter-group input[type="checkbox"] { margin-right: 10px; accent-color: #ff6b6b; }
+        
+        /* Product Grid */
+        .product-card { background: white; border-radius: 12px; overflow: hidden; transition: 0.3s; border: 1px solid #eee; position: relative; display: flex; flex-direction: column; height: 100%; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: #ff6b6b; }
+        .card-image { height: 220px; background-color: #f4f4f4; display: flex; align-items: center; justify-content: center; position: relative; }
+        .card-image img { max-width: 90%; max-height: 90%; object-fit: contain; transition: 0.3s; }
+        .product-card:hover .card-image img { transform: scale(1.05); }
+        .badge-cat { position: absolute; top: 10px; left: 10px; background: white; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .card-details { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-title { font-weight: 700; font-size: 1rem; margin-bottom: 5px; color: #333; }
+        .product-price { color: #ff6b6b; font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; }
+        
+        .btn-add { width: 100%; padding: 10px; border: 2px solid #111; background: transparent; color: #111; font-weight: 700; border-radius: 8px; transition: 0.3s; margin-top: auto; }
+        .btn-add:hover { background: #111; color: white; }
+
+        /* Toast */
+        .toast-notification { position: fixed; bottom: 30px; right: 30px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); transform: translateY(100px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; opacity: 0; }
+        .toast-notification.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
+
     <header>
         <div class="brand">🍌 MINION SHOE</div>
-        <nav>
-          <a href="homeindex.php">Home</a>
+        <nav class="d-none d-md-flex">
+            <a href="homeindex.php">Home</a>
             <a href="catelouge.php" class="active">Shop</a>
-            <a href="shoedetail.php">Detail</a>
+            <a href="shoedetail.php">Gallery</a>
             <a href="aboutus.php">About</a>
-    </nav>
         </nav>
-        <div class="nav-icons">
-            <a href="cart.php" style="text-decoration:none; color:inherit;"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="cart.php" class="text-dark text-decoration-none fw-bold">
+                <i class="fa-solid fa-cart-shopping me-1"></i> Cart
+            </a>
         </div>
     </header>
 
-    <div class="container mt-5">
-        <div class="product-grid" id="productGrid">
-            <?php foreach ($products as $p): ?>
-                <div class="product-card">
-                    <div class="card-image">
-                        <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="Shoe">
+    <div class="shop-container">
+        <div class="row g-4">
+            
+            <div class="col-lg-3">
+                <div class="filter-sidebar sticky-top" style="top: 100px; z-index: 90;">
+                    <div class="filter-title">
+                        Filters <i class="fas fa-filter text-muted"></i>
                     </div>
-                    <div class="p-3">
-                        <small class="text-muted text-uppercase fw-bold"><?= htmlspecialchars($p['category']) ?></small>
-                        <h4 class="h6 fw-bold"><?= htmlspecialchars($p['product_name']) ?></h4>
-                        <p class="text-danger fw-bold">RM <?= number_format($p['price'], 2) ?></p>
-                        <button class="btn-add" onclick="addToCart(<?= $p['id'] ?>)">Add to Cart</button>
+                    
+                    <div class="filter-group">
+                        <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search shoes..." onkeyup="applyFilters()">
                     </div>
+
+                    <div class="filter-group">
+                        <h6 class="fw-bold mb-3">Categories</h6>
+                        <label><input type="checkbox" class="cat-filter" value="Men" onchange="applyFilters()"> Men's Running</label>
+                        <label><input type="checkbox" class="cat-filter" value="Women" onchange="applyFilters()"> Women's Sport</label>
+                        <label><input type="checkbox" class="cat-filter" value="Kids" onchange="applyFilters()"> Kids</label>
+                    </div>
+
+                    <div class="filter-group">
+                        <h6 class="fw-bold mb-3">Sort By</h6>
+                        <select id="sortSelect" class="form-select" onchange="applyFilters()">
+                            <option value="newest">Newest Arrivals</option>
+                            <option value="low-high">Price: Low to High</option>
+                            <option value="high-low">Price: High to Low</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-outline-dark w-100 btn-sm" onclick="resetFilters()">Reset Filters</button>
                 </div>
-            <?php endforeach; ?>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold m-0">All Products</h4>
+                    <span class="text-muted small" id="productCount">Showing all items</span>
+                </div>
+
+                <div class="row g-4" id="productGrid">
+                    </div>
+                
+                <div id="emptyState" class="text-center py-5 d-none">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No products found.</h4>
+                    <p class="text-muted">Try adjusting your filters.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <div id="toast" class="toast-notification">
+        <i class="fas fa-check-circle me-2 text-warning"></i> 
+        <span id="toastMsg">Added to cart!</span>
+    </div>
+
     <script>
-        function addToCart(productId) {
-            // Updated to match your filename
-            fetch('addtocart.php?id=' + productId)
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        alert('Shoe added to your cart!');
-                    }
+        // 1. Load Data
+        const products = <?= json_encode($products); ?>;
+        
+        // 2. Main Render & Filter Function
+        function applyFilters() {
+            const container = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+            const countLabel = document.getElementById('productCount');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const sort = document.getElementById('sortSelect').value;
+            
+            // Get selected categories
+            const checkedCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value.toLowerCase());
+
+            container.innerHTML = '';
+
+            // A. Filter Logic
+            let filtered = products.filter(p => {
+                const matchesSearch = p.product_name.toLowerCase().includes(search);
+                const matchesCat = checkedCats.length === 0 || checkedCats.some(cat => p.category.toLowerCase().includes(cat));
+                return matchesSearch && matchesCat;
+            });
+
+            // B. Sort Logic
+            if (sort === 'low-high') {
+                filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else if (sort === 'high-low') {
+                filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            } else {
+                filtered.sort((a, b) => b.id - a.id); // Default ID sort
+            }
+
+            // C. Update UI
+            countLabel.innerText = `Showing ${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('d-none');
+            } else {
+                emptyState.classList.add('d-none');
+                filtered.forEach(p => {
+                    container.innerHTML += `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="product-card">
+                                <span class="badge-cat">${p.category}</span>
+                                <div class="card-image">
+                                    <img src="${p.image_url}" alt="${p.product_name}">
+                                </div>
+                                <div class="card-details">
+                                    <div class="product-title">${p.product_name}</div>
+                                    <div class="product-price">RM ${parseFloat(p.price).toFixed(2)}</div>
+                                    <button class="btn-add" onclick="addToCart(${p.id}, '${p.product_name}')">
+                                        Add to Cart <i class="fas fa-plus ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
                 });
+            }
         }
+
+        // 3. Add to Cart (AJAX)
+        function addToCart(productId, productName) {
+            // Using POST is better, but keeping your GET structure for simplicity if your PHP expects GET
+            // Better approach: Use POST like in your previous request
+            const formData = new FormData();
+            formData.append('product_id', productId);
+            formData.append('quantity', 1);
+            
+            fetch('addtocart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    showToast(`${productName} added to cart!`);
+                } else {
+                    showToast('Error: ' + data.message, true);
+                }
+            })
+            .catch(error => showToast('Connection error', true));
+        }
+
+        // 4. Toast UI
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.innerText = msg;
+            toast.style.background = isError ? '#dc3545' : '#1a1a1a';
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 5. Reset
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sortSelect').value = 'newest';
+            document.querySelectorAll('.cat-filter').forEach(cb => cb.checked = false);
+            applyFilters();
+        }
+
+        // Initial Load
+        applyFilters();
     </script>
 </body>
 </html>

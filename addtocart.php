@@ -1,47 +1,65 @@
 <?php
 session_start();
-header('Content-Type: application/json');
-require_once('Minionshoesconfig.php');
+require_once('Minionshoesconfig.php'); 
 
-if (isset($_GET['id'])) {
-    $productId = intval($_GET['id']);
+$response = ['success' => false, 'message' => 'Unknown error'];
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    $stmt = $conn->prepare("SELECT * FROM allproducts WHERE id = ?");
-    $stmt->bind_param("i", $productId);
-    $stmt->execute();
-    $product = $stmt->get_result()->fetch_assoc();
+    $product_id = intval($_POST['product_id']);
+    $quantity   = intval($_POST['quantity']);
+    $size       = $_POST['size'] ?? 'Standard';
+    
+    // Check if the user selected a specific color from the modal (optional), otherwise we set a default later
+    $posted_color = $_POST['color'] ?? ''; 
 
-    if ($product) {
-        if (!isset($_SESSION['cart'])) {
-            $_SESSION['cart'] = [];
-        }
+    if ($product_id > 0) {
+        $stmt = $conn->prepare("SELECT * FROM allproducts WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        $found = false;
-        foreach ($_SESSION['cart'] as &$item) {
-            if ($item['id'] == $productId) {
-                $item['quantity'] += 1;
-                $found = true;
-                break;
-            }
-        }
+        if ($result->num_rows > 0) {
+            $product = $result->fetch_assoc();
 
-        if (!$found) {
+            // 1. FETCH COLORS FROM DATABASE
+            // This gets the string like "black,red,white"
+            $db_colors = $product['colors'] ?? 'Standard'; 
             
-            $_SESSION['cart'][] = [
-                'id' => $product['id'],
-                'name' => $product['name'], 
-                'price' => floatval($product['price']), 
-                'image' => $product['image_url'], 
-                'quantity' => 1,
-                'colors' => 'black', 
-                'category' => $product['category']
-            ];
-        }
+            // 2. SET DEFAULT COLOR
+            // Convert "black,red,white" into an array -> ['black', 'red', 'white']
+            $available_colors_array = explode(',', $db_colors);
+            
+            // If user picked a color, use it. Otherwise, pick the first color from the list.
+            $selected_color = $posted_color ? $posted_color : trim($available_colors_array[0]);
 
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Product not found']);
+            // 3. CREATE CART ITEM
+            // We use ID-Size as the unique key. 
+            $cartKey = $product_id . '-' . $size;
+
+            if (!isset($_SESSION['cart'])) { $_SESSION['cart'] = []; }
+
+            if (isset($_SESSION['cart'][$cartKey])) {
+                $_SESSION['cart'][$cartKey]['quantity'] += $quantity;
+            } else {
+                $_SESSION['cart'][$cartKey] = [
+                    'id'             => $product['id'],
+                    'name'           => $product['product_name'],
+                    'price'          => $product['price'],
+                    'image'          => $product['image_url'],
+                    'size'           => $size,
+                    'quantity'       => $quantity,
+                    'selected_color' => $selected_color, // The specific color chosen
+                    'all_colors'     => $db_colors       // The list of ALL options for this shoe
+                ];
+            }
+
+            $response['success'] = true;
+            $response['message'] = 'Added to cart!';
+        }
     }
 }
+
+header('Content-Type: application/json');
+echo json_encode($response);
 ?>

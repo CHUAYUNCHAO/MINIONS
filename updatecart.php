@@ -1,6 +1,6 @@
 <?php
 session_start();
-header('Content-Type: application/json');
+$response = ['success' => false];
 
 if (isset($_GET['index']) && isset($_GET['action'])) {
     $index = $_GET['index'];
@@ -8,24 +8,26 @@ if (isset($_GET['index']) && isset($_GET['action'])) {
     $value = $_GET['value'];
 
     if (isset($_SESSION['cart'][$index])) {
-        switch ($action) {
-            case 'quantity':
-                
-                $newQty = max(1, intval($value));
+        
+        if ($action === 'quantity') {
+            $newQty = intval($value);
+            if ($newQty > 0) {
                 $_SESSION['cart'][$index]['quantity'] = $newQty;
-                break;
-
-            case 'color':
-                $_SESSION['cart'][$index]['colors'] = htmlspecialchars($value);
-                break;
-
-            case 'remove':
-                array_splice($_SESSION['cart'], $index, 1);
-                break;
+                $response['success'] = true;
+            }
+        } 
+        elseif ($action === 'color') {
+            // Save the user's choice to 'selected_color'
+            $_SESSION['cart'][$index]['selected_color'] = $value; 
+            $response['success'] = true;
         }
-        echo json_encode(['success' => true]);
-        exit;
+        elseif ($action === 'remove') {
+            unset($_SESSION['cart'][$index]);
+            $response['success'] = true;
+        }
     }
 }
 
-echo json_encode(['success' => false]);
+header('Content-Type: application/json');
+echo json_encode($response);
+?>

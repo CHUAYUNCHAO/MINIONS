@@ -5,7 +5,7 @@ $conn = new mysqli("localhost", "root", "", "minion_shoe_db");
 // 1. Fetch current data to fill the form
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
-    $res = $conn->query("SELECT * FROM products WHERE id = $id");
+    $res = $conn->query("SELECT * FROM allproducts WHERE id = $id");
     $product = $res->fetch_assoc();
 }
 

@@ -152,158 +152,164 @@ while($row = $result->fetch_assoc()) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 1. Data Initialization
-        const products = <?= json_encode($products); ?>;
-        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
-        
-        let state = { category: 'all', search: '', sort: 'newest' };
+<script>
+    // 1. Data Initialization
+    const products = <?= json_encode($products); ?>;
+    const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+    
+    let state = { category: 'all', search: '', sort: 'newest' };
 
-        // 2. Render Function
-        function render() {
-            const container = document.getElementById('productContainer');
-            const emptyState = document.getElementById('emptyState');
-            container.innerHTML = '';
+    // 2. Render Function (THE FIX IS HERE)
+    function render() {
+        const container = document.getElementById('productContainer');
+        const emptyState = document.getElementById('emptyState');
+        container.innerHTML = '';
 
-            let filtered = products.filter(p => {
-                const matchCat = state.category === 'all' || 
-                                 (p.category && p.category.toLowerCase().includes(state.category.toLowerCase()));
-                const matchSearch = p.product_name.toLowerCase().includes(state.search.toLowerCase());
-                return matchCat && matchSearch;
-            });
+        let filtered = products.filter(p => {
+            // --- 1. Search Filter ---
+            const matchSearch = p.product_name.toLowerCase().includes(state.search.toLowerCase());
 
-            if (state.sort === 'low-high') {
-                filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-            } else if (state.sort === 'high-low') {
-                filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-            } else {
-                filtered.sort((a, b) => b.id - a.id);
-            }
-
-            if (filtered.length === 0) {
-                emptyState.classList.remove('d-none');
-            } else {
-                emptyState.classList.add('d-none');
-                filtered.forEach(p => {
-                    container.innerHTML += `
-                        <div class="col-md-6 col-lg-3 animation-fade">
-                            <div class="shoe-card h-100 d-flex flex-column">
-                                <span class="badge-cat">${p.category}</span>
-                                <div class="img-wrapper">
-                                    <img src="${p.image_url}" alt="${p.product_name}">
-                                </div>
-                                <div class="shoe-body flex-grow-1 d-flex flex-column">
-                                    <div class="mb-auto">
-                                        <div class="shoe-title" title="${p.product_name}">${p.product_name}</div>
-                                        <div class="price-tag">RM ${parseFloat(p.price).toFixed(2)}</div>
-                                    </div>
-                                    <button class="btn-view" onclick="openModal(${p.id})">
-                                        View Details
-                                    </button>
-                                </div>
-                            </div>
-                        </div>`;
-                });
-            }
-        }
-
-        // 3. Filter Functions
-        function setCategory(cat, btn) {
-            state.category = cat;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            render();
-        }
-        function setSearch(val) { state.search = val; render(); }
-        function setSort(val) { state.sort = val; render(); }
-
-        // 4. Modal Logic
-        function openModal(id) {
-            const p = products.find(item => item.id == id);
+            // --- 2. Category Filter (Fixed for Men vs Women) ---
+            let matchCat = false;
             
-            document.getElementById('modalImg').src = p.image_url;
-            document.getElementById('modalName').innerText = p.product_name;
-            document.getElementById('modalCat').innerText = p.category;
-            document.getElementById('modalPrice').innerText = "RM " + parseFloat(p.price).toFixed(2);
-            document.getElementById('modalDesc').innerText = p.description || "No description available.";
-            document.getElementById('modalId').value = p.id;
-
-            // Generate Size Radios
-            const sizeContainer = document.getElementById('modalSizes');
-            if(p.sizes && p.sizes.length > 0) {
-                sizeContainer.innerHTML = p.sizes.map((s, index) => `
-                    <input type="radio" class="size-radio" name="size" id="size-${index}" value="${s}" ${index===0 ? 'checked' : ''}>
-                    <label class="size-label" for="size-${index}">${s}</label>
-                `).join('');
+            if (state.category === 'all') {
+                matchCat = true;
             } else {
-                sizeContainer.innerHTML = '<p class="text-danger">One Size</p><input type="hidden" name="size" value="Standard">';
-            }
+                const prodCat = p.category ? p.category.toLowerCase() : '';
+                const selectedCat = state.category.toLowerCase();
 
-            productModal.show();
-        }
-
-        // 5. FIXED: Trigger Add To Cart
-        function triggerAddToCart() {
-            const id = document.getElementById('modalId').value;
-            const qty = document.getElementById('modalQty').value;
-            
-            // Get selected size
-            const sizeInput = document.querySelector('input[name="size"]:checked');
-            const size = sizeInput ? sizeInput.value : 'Standard';
-
-            // Create Form Data to send via POST
-            const formData = new FormData();
-            formData.append('product_id', id);
-            formData.append('quantity', qty);
-            formData.append('size', size);
-
-            // Fetch request to addtocart.php
-            fetch('addtocart.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    alert('Successfully added to cart!');
-                    productModal.hide(); // Close modal on success
+                if (selectedCat === 'men') {
+                    // If filtering for "Men", it must NOT contain "Women"
+                    matchCat = prodCat.includes('men') && !prodCat.includes('women');
                 } else {
-                    alert('Failed to add to cart. ' + (data.message || ''));
+                    // Standard check for other categories
+                    matchCat = prodCat.includes(selectedCat);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error connecting to server.');
+            }
+
+            return matchCat && matchSearch;
+        });
+
+        // --- Sorting Logic ---
+        if (state.sort === 'low-high') {
+            filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        } else if (state.sort === 'high-low') {
+            filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        } else {
+            filtered.sort((a, b) => b.id - a.id);
+        }
+
+        // --- Display Logic ---
+        if (filtered.length === 0) {
+            emptyState.classList.remove('d-none');
+        } else {
+            emptyState.classList.add('d-none');
+            filtered.forEach(p => {
+                // Ensure Image URL works
+                let imgSrc = p.image_url ? p.image_url : 'https://via.placeholder.com/300';
+                
+                container.innerHTML += `
+                    <div class="col-md-6 col-lg-3 animation-fade">
+                        <div class="shoe-card h-100 d-flex flex-column">
+                            <span class="badge-cat">${p.category}</span>
+                            <div class="img-wrapper">
+                                <img src="${imgSrc}" alt="${p.product_name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                            </div>
+                            <div class="shoe-body flex-grow-1 d-flex flex-column">
+                                <div class="mb-auto">
+                                    <div class="shoe-title" title="${p.product_name}">${p.product_name}</div>
+                                    <div class="price-tag">RM ${parseFloat(p.price).toFixed(2)}</div>
+                                </div>
+                                <button class="btn-view" onclick="openModal(${p.id})">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
             });
         }
-        function addToCart(productId) {
-    // ... (your existing code to get quantity/size/color) ...
+    }
 
-    fetch('addtocart.php', {
-        method: 'POST',
-        body: formData // or however you are sending data
-    })
-    .then(response => response.json())
-    .then(data => {
-        // 1. CHECK FOR LOGIN REQUIREMENT
-        if (data.message === 'login_required') {
-            alert("Please log in first."); // The specific prompt you wanted
-            window.location.href = "custloginandregister.php"; // Redirect to login
-            return;
-        }
-
-        // 2. Standard Success/Error Handling
-        if (data.success) {
-            alert("Added to cart successfully!");
-            // Update cart count if you have one
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
+    // 3. Filter Functions
+    function setCategory(cat, btn) {
+        state.category = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         render();
-    </script>
+    }
+    function setSearch(val) { state.search = val; render(); }
+    function setSort(val) { state.sort = val; render(); }
+
+    // 4. Modal Logic
+    function openModal(id) {
+        const p = products.find(item => item.id == id);
+        
+        let imgSrc = p.image_url ? p.image_url : 'https://via.placeholder.com/300';
+
+        document.getElementById('modalImg').src = imgSrc;
+        document.getElementById('modalName').innerText = p.product_name;
+        document.getElementById('modalCat').innerText = p.category;
+        document.getElementById('modalPrice').innerText = "RM " + parseFloat(p.price).toFixed(2);
+        document.getElementById('modalDesc').innerText = p.description || "No description available.";
+        document.getElementById('modalId').value = p.id;
+
+        // Generate Size Radios
+        const sizeContainer = document.getElementById('modalSizes');
+        if(p.sizes && p.sizes.length > 0) {
+            sizeContainer.innerHTML = p.sizes.map((s, index) => `
+                <input type="radio" class="size-radio" name="size" id="size-${index}" value="${s}" ${index===0 ? 'checked' : ''}>
+                <label class="size-label" for="size-${index}">${s}</label>
+            `).join('');
+        } else {
+            sizeContainer.innerHTML = '<p class="text-danger">Standard Size</p><input type="hidden" name="size" value="Standard">';
+        }
+
+        productModal.show();
+    }
+
+    // 5. Add To Cart Logic
+    function triggerAddToCart() {
+        const id = document.getElementById('modalId').value;
+        const qty = document.getElementById('modalQty').value;
+        
+        // Get selected size
+        const sizeInput = document.querySelector('input[name="size"]:checked');
+        const size = sizeInput ? sizeInput.value : 'Standard';
+
+        // Create Form Data
+        const formData = new FormData();
+        formData.append('product_id', id);
+        formData.append('quantity', qty);
+        formData.append('size', size);
+
+        // Fetch request
+        fetch('addtocart.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'login_required') {
+                alert("Please log in first.");
+                window.location.href = "custloginandregister.php";
+                return;
+            }
+
+            if(data.success) {
+                alert('Successfully added to cart!');
+                productModal.hide();
+            } else {
+                alert('Failed to add to cart: ' + (data.message || ''));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error connecting to server.');
+        });
+    }
+
+    // Initial Render
+    render();
+</script>
 </body>
 </html>

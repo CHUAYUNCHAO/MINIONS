@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once('catelogue.php');
+require_once('homeindex.php');
 $products = $conn->query("SELECT * FROM allproducts ORDER BY id DESC");
 ?>
 <!DOCTYPE html>

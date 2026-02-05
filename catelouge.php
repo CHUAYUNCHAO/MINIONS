@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Adjust this filename if your config file is named differently (e.g. Minionshoesconfig.php)
 require_once('Minionshoesconfig.php');
 
 // Fetch all products
@@ -90,8 +91,8 @@ while($row = $result->fetch_assoc()) {
 
                     <div class="filter-group">
                         <h6 class="fw-bold mb-3">Categories</h6>
-                        <label><input type="checkbox" class="cat-filter" value="Men" onchange="applyFilters()"> Men's Running</label>
-                        <label><input type="checkbox" class="cat-filter" value="Women" onchange="applyFilters()"> Women's Sport</label>
+                        <label><input type="checkbox" class="cat-filter" value="Men" onchange="applyFilters()"> Men</label>
+                        <label><input type="checkbox" class="cat-filter" value="Women" onchange="applyFilters()"> Women</label>
                         <label><input type="checkbox" class="cat-filter" value="Kids" onchange="applyFilters()"> Kids</label>
                     </div>
 
@@ -149,10 +150,25 @@ while($row = $result->fetch_assoc()) {
 
             container.innerHTML = '';
 
-            // A. Filter Logic
+            // A. Filter Logic (FIXED FOR MEN/WOMEN)
             let filtered = products.filter(p => {
                 const matchesSearch = p.product_name.toLowerCase().includes(search);
-                const matchesCat = checkedCats.length === 0 || checkedCats.some(cat => p.category.toLowerCase().includes(cat));
+                
+                // If no checkboxes checked, show all categories
+                if (checkedCats.length === 0) {
+                    return matchesSearch;
+                }
+
+                // Check if product matches ANY of the checked categories
+                const matchesCat = checkedCats.some(cat => {
+                    const prodCat = p.category.toLowerCase();
+                    // Fix: If filter is "men", exclude "women"
+                    if (cat === 'men') {
+                        return prodCat.includes('men') && !prodCat.includes('women');
+                    }
+                    return prodCat.includes(cat);
+                });
+
                 return matchesSearch && matchesCat;
             });
 
@@ -173,17 +189,20 @@ while($row = $result->fetch_assoc()) {
             } else {
                 emptyState.classList.add('d-none');
                 filtered.forEach(p => {
+                    // Image fallback logic
+                    let imgSrc = p.image_url ? p.image_url : 'https://via.placeholder.com/300';
+                    
                     container.innerHTML += `
                         <div class="col-md-6 col-lg-4">
                             <div class="product-card">
                                 <span class="badge-cat">${p.category}</span>
                                 <div class="card-image">
-                                    <img src="${p.image_url}" alt="${p.product_name}">
+                                    <img src="${imgSrc}" alt="${p.product_name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                                 </div>
                                 <div class="card-details">
                                     <div class="product-title">${p.product_name}</div>
                                     <div class="product-price">RM ${parseFloat(p.price).toFixed(2)}</div>
-                                    <button class="btn-add" onclick="addToCart(${p.id}, '${p.product_name}')">
+                                    <button class="btn-add" onclick="addToCart(${p.id}, '${p.product_name.replace(/'/g, "\\'")}')">
                                         Add to Cart <i class="fas fa-plus ms-1"></i>
                                     </button>
                                 </div>
@@ -193,13 +212,14 @@ while($row = $result->fetch_assoc()) {
             }
         }
 
-        // 3. Add to Cart (AJAX)
+        // 3. Add to Cart (Unified & Fixed)
         function addToCart(productId, productName) {
-            // Using POST is better, but keeping your GET structure for simplicity if your PHP expects GET
-            // Better approach: Use POST like in your previous request
             const formData = new FormData();
             formData.append('product_id', productId);
             formData.append('quantity', 1);
+            // Default size/color for Quick Add
+            formData.append('size', 'Standard');
+            formData.append('color', 'Standard');
             
             fetch('addtocart.php', {
                 method: 'POST',
@@ -207,6 +227,14 @@ while($row = $result->fetch_assoc()) {
             })
             .then(response => response.json())
             .then(data => {
+                // LOGIN CHECK
+                if(data.message === 'login_required') {
+                    if(confirm("Please log in first to add items to your cart.")) {
+                        window.location.href = "custloginandregister.php";
+                    }
+                    return;
+                }
+
                 if(data.success) {
                     showToast(`${productName} added to cart!`);
                 } else {
@@ -234,33 +262,6 @@ while($row = $result->fetch_assoc()) {
             document.querySelectorAll('.cat-filter').forEach(cb => cb.checked = false);
             applyFilters();
         }
-
-function addToCart(productId) {
-    // ... (your existing code to get quantity/size/color) ...
-
-    fetch('addtocart.php', {
-        method: 'POST',
-        body: formData // or however you are sending data
-    })
-    .then(response => response.json())
-    .then(data => {
-        // 1. CHECK FOR LOGIN REQUIREMENT
-        if (data.message === 'login_required') {
-            alert("Please log in first."); // The specific prompt you wanted
-            window.location.href = "custloginandregister.php"; // Redirect to login
-            return;
-        }
-
-        // 2. Standard Success/Error Handling
-        if (data.success) {
-            alert("Added to cart successfully!");
-            // Update cart count if you have one
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
 
         // Initial Load
         applyFilters();

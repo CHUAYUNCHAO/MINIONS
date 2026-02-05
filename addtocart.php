@@ -2,7 +2,14 @@
 session_start();
 require_once('Minionshoesconfig.php'); 
 
+// Default response
 $response = ['success' => false, 'message' => 'Unknown error'];
+
+// --- 1. SECURITY CHECK: FORCE LOGIN ---
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'login_required']);
+    exit(); // Stop execution immediately
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -10,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity   = intval($_POST['quantity']);
     $size       = $_POST['size'] ?? 'Standard';
     
-    // Check if the user selected a specific color from the modal (optional), otherwise we set a default later
+    // Check if user selected a color, otherwise default
     $posted_color = $_POST['color'] ?? ''; 
 
     if ($product_id > 0) {
@@ -22,20 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result->num_rows > 0) {
             $product = $result->fetch_assoc();
 
-            // 1. FETCH COLORS FROM DATABASE
-            // This gets the string like "black,red,white"
+            // Handle Colors
             $db_colors = $product['colors'] ?? 'Standard'; 
-            
-            // 2. SET DEFAULT COLOR
-            // Convert "black,red,white" into an array -> ['black', 'red', 'white']
             $available_colors_array = explode(',', $db_colors);
-            
-            // If user picked a color, use it. Otherwise, pick the first color from the list.
             $selected_color = $posted_color ? $posted_color : trim($available_colors_array[0]);
 
-            // 3. CREATE CART ITEM
-            // We use ID-Size as the unique key. 
-            $cartKey = $product_id . '-' . $size;
+            // Create Unique Cart Key
+            $cartKey = $product_id . '-' . $size . '-' . $selected_color;
 
             if (!isset($_SESSION['cart'])) { $_SESSION['cart'] = []; }
 
@@ -49,13 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'image'          => $product['image_url'],
                     'size'           => $size,
                     'quantity'       => $quantity,
-                    'selected_color' => $selected_color, // The specific color chosen
-                    'all_colors'     => $db_colors       // The list of ALL options for this shoe
+                    'selected_color' => $selected_color,
+                    'all_colors'     => $db_colors 
                 ];
             }
 
             $response['success'] = true;
-            $response['message'] = 'Added to cart!';
+            $response['message'] = 'Added to cart successfully!';
+        } else {
+            $response['message'] = 'Product not found.';
         }
     }
 }

@@ -100,7 +100,7 @@ $result = $conn->query($sql);
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <a href="profile.php" class="btn btn-dark rounded-pill px-4 btn-sm">My Account</a>
                 <?php else: ?>
-                    <a href="login.php" class="btn btn-outline-dark rounded-pill px-4 btn-sm">Login</a>
+                    <a href="custloginandregister.php" class="btn btn-outline-dark rounded-pill px-4 btn-sm">Login</a>
                 <?php endif; ?>
             </div>
         </div>

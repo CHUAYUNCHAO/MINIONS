@@ -2,13 +2,12 @@
 session_start();
 require_once('Minionshoesconfig.php'); 
 
-// Default response
 $response = ['success' => false, 'message' => 'Unknown error'];
 
-// --- 1. SECURITY CHECK: FORCE LOGIN ---
+// 1. SECURITY CHECK: Is user logged in?
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'login_required']);
-    exit(); // Stop execution immediately
+    exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity   = intval($_POST['quantity']);
     $size       = $_POST['size'] ?? 'Standard';
     
-    // Check if user selected a color, otherwise default
+    // Check for color input
     $posted_color = $_POST['color'] ?? ''; 
 
     if ($product_id > 0) {
@@ -29,19 +28,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result->num_rows > 0) {
             $product = $result->fetch_assoc();
 
-            // Handle Colors
+            // 1. FETCH COLORS
             $db_colors = $product['colors'] ?? 'Standard'; 
+            
+            // 2. SET DEFAULT COLOR
             $available_colors_array = explode(',', $db_colors);
+            
+            // Use posted color or default to first available
             $selected_color = $posted_color ? $posted_color : trim($available_colors_array[0]);
 
-            // Create Unique Cart Key
+            // --- THE FIX IS HERE ---
+            // 3. CREATE CART KEY
+            // We must include ID + Size + Color so "Red" and "Blue" are separate items
             $cartKey = $product_id . '-' . $size . '-' . $selected_color;
 
             if (!isset($_SESSION['cart'])) { $_SESSION['cart'] = []; }
 
             if (isset($_SESSION['cart'][$cartKey])) {
+                // If exact same item (same id, size, AND color) exists, update quantity
                 $_SESSION['cart'][$cartKey]['quantity'] += $quantity;
             } else {
+                // Otherwise add as new item
                 $_SESSION['cart'][$cartKey] = [
                     'id'             => $product['id'],
                     'name'           => $product['product_name'],
@@ -49,13 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'image'          => $product['image_url'],
                     'size'           => $size,
                     'quantity'       => $quantity,
-                    'selected_color' => $selected_color,
-                    'all_colors'     => $db_colors 
+                    'selected_color' => $selected_color, 
+                    'all_colors'     => $db_colors       
                 ];
             }
 
             $response['success'] = true;
-            $response['message'] = 'Added to cart successfully!';
+            $response['message'] = 'Added to cart!';
         } else {
             $response['message'] = 'Product not found.';
         }

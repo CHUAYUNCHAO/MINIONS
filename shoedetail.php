@@ -276,6 +276,32 @@ while($row = $result->fetch_assoc()) {
                 alert('Error connecting to server.');
             });
         }
+        function addToCart(productId) {
+    // ... (your existing code to get quantity/size/color) ...
+
+    fetch('addtocart.php', {
+        method: 'POST',
+        body: formData // or however you are sending data
+    })
+    .then(response => response.json())
+    .then(data => {
+        // 1. CHECK FOR LOGIN REQUIREMENT
+        if (data.message === 'login_required') {
+            alert("Please log in first."); // The specific prompt you wanted
+            window.location.href = "custloginandregister.php"; // Redirect to login
+            return;
+        }
+
+        // 2. Standard Success/Error Handling
+        if (data.success) {
+            alert("Added to cart successfully!");
+            // Update cart count if you have one
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 
         render();
     </script>

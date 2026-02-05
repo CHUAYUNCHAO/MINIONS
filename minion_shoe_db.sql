@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 04, 2026 at 02:33 PM
+-- Generation Time: Feb 05, 2026 at 07:07 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,30 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `addusers`
---
-
-CREATE TABLE `addusers` (
-  `id` int(11) NOT NULL,
-  `full_name` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `shoe_size` varchar(10) DEFAULT NULL,
-  `total_spent` decimal(10,2) DEFAULT 0.00,
-  `status` enum('New','VIP','Regular') DEFAULT 'Regular',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `addusers`
---
-
-INSERT INTO `addusers` (`id`, `full_name`, `email`, `shoe_size`, `total_spent`, `status`, `created_at`) VALUES
-(1, 'Marcus Jordan', 'marcus@example.com', 'US 10.5', 450.00, 'Regular', '2024-01-14 16:00:00'),
-(4, 'Chua yun chao', 'chuayc1110@gaha.cvom', 'UK 8', NULL, NULL, '2026-02-01 06:11:41');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `admins`
 --
 
@@ -55,17 +31,19 @@ CREATE TABLE `admins` (
   `id` int(11) NOT NULL,
   `admin_id` varchar(50) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `admin_name` varchar(100) DEFAULT NULL
+  `admin_name` varchar(100) DEFAULT NULL,
+  `reset_token` varchar(64) DEFAULT NULL,
+  `token_expiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `admin_id`, `password`, `admin_name`) VALUES
-(1, '242DT2423Z', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', 'Captain Gru'),
-(2, '242DT242BZ', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', 'Staff Kevin'),
-(3, '242DT24334', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', 'Staff Bob');
+INSERT INTO `admins` (`id`, `admin_id`, `password`, `admin_name`, `reset_token`, `token_expiry`) VALUES
+(1, '242DT2423Z', '$2y$10$ZV1lEAf7VzszeFv7yATWreHrpNHriPpJhCM7vYKYV/gRaHD0SMgXm', 'Captain Gru', NULL, NULL),
+(2, '242DT242BZ', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', 'Staff Kevin', NULL, NULL),
+(3, '242DT24334', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', 'Staff Bob', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -134,7 +112,6 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `icon`, `parent_cat`, `description`, `created_at`) VALUES
-(1, 'Sneakers', '🏃', 'Men\'s Shoes', 'Casual and athletic sneakers', '2026-01-31 07:09:40'),
 (3, 'Nike', '🏀', 'Men\'s Shoes', '', '2026-01-31 08:02:46'),
 (8, 'Nike', '🏃', 'Women\'s Shoes', '', '2026-02-01 06:28:17');
 
@@ -160,8 +137,11 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `customer_name`, `customer_email`, `order_date`, `total_amount`, `status`, `shipping_address`, `payment_method`) VALUES
-(1, 'Kevin', 'guest@example.com', '2026-02-02 09:41:04', 1148.00, 'Pending', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA', 'Online Banking'),
-(2, 'Kevin', 'guest@example.com', '2026-02-03 07:17:16', 3950.00, 'Pending', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA', 'Online Banking');
+(1, 'Kevin', 'guest@example.com', '2026-02-02 09:41:04', 1148.00, 'Cancelled', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA', 'Online Banking'),
+(2, 'Kevin', 'guest@example.com', '2026-02-03 07:17:16', 3950.00, 'Pending', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA', 'Online Banking'),
+(3, 'Kevin', 'chuayc2006@gmail.com', '2026-02-04 16:45:11', 152.80, 'Shipped', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA', 'Online Banking'),
+(4, 'Chua', 'chuayc2006@gmail.com', '2026-02-04 19:22:59', 216.40, 'Pending', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA, JOHOR, BATU PAHAT, 83000', 'Credit Card'),
+(6, 'Chua', 'chuayc2006@gmail.com', '2026-02-04 22:21:29', 57.40, 'Shipped', '19, JALAN SETIA JAYA, TAMAN SETIA JAYA, JOHOR, BATU PAHAT, 83000', 'Online Banking');
 
 -- --------------------------------------------------------
 
@@ -203,7 +183,9 @@ INSERT INTO `order_details` (`id`, `order_id`, `product_id`, `quantity`, `price_
 (19, 2, 1, 1, 179.00),
 (20, 2, 1, 1, 179.00),
 (21, 2, 1, 1, 179.00),
-(22, 2, 1, 1, 179.00);
+(22, 2, 1, 1, 179.00),
+(23, 3, 19, 1, 40.00),
+(24, 3, 18, 2, 45.00);
 
 -- --------------------------------------------------------
 
@@ -217,26 +199,23 @@ CREATE TABLE `registerusers` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `shoe_size` varchar(20) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `reset_token` varchar(64) DEFAULT NULL,
+  `token_expiry` datetime DEFAULT NULL,
+  `account_status` varchar(20) DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `registerusers`
 --
 
-INSERT INTO `registerusers` (`id`, `full_name`, `email`, `password`, `shoe_size`, `created_at`) VALUES
-(3, 'Kevin', 'chuayc2006@gmail.com', '$2y$10$SFiMWbtkV3bNQNf/5WOrE.r4vtY05aX.xIZ0/ud673cI18T7LJfva', NULL, '2026-02-01 08:50:08');
+INSERT INTO `registerusers` (`id`, `full_name`, `email`, `password`, `shoe_size`, `created_at`, `reset_token`, `token_expiry`, `account_status`) VALUES
+(3, 'Chua', 'chuayc2006@gmail.com', '$2y$10$mbfPmxu..TLJteF1B6oUie7TMu2oRNnlx2pHqf21CfEyY40bZc28S', NULL, '2026-02-01 08:50:08', NULL, NULL, 'Active'),
+(4, 'Kevin', 'bonddgg@gmail.com', '$2y$10$mbfPmxu..TLJteF1B6oUie7TMu2oRNnlx2pHqf21CfEyY40bZc28S', NULL, '2026-02-05 04:57:57', NULL, NULL, 'Inactive');
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `addusers`
---
-ALTER TABLE `addusers`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Indexes for table `admins`
@@ -281,12 +260,6 @@ ALTER TABLE `registerusers`
 --
 
 --
--- AUTO_INCREMENT for table `addusers`
---
-ALTER TABLE `addusers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
@@ -308,19 +281,19 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `registerusers`
 --
 ALTER TABLE `registerusers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

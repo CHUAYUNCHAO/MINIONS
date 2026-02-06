@@ -9,7 +9,7 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 $revenue = $conn->query("SELECT SUM(total_amount) as total FROM orders WHERE status != 'Cancelled'")->fetch_assoc()['total'];
 
 // B. Total Customers
-$userCount = $conn->query("SELECT COUNT(*) as total FROM addusers")->fetch_assoc()['total'];
+$userCount = $conn->query("SELECT COUNT(*) as total FROM registerusers")->fetch_assoc()['total'];
 
 // C. Total Orders
 $orderCount = $conn->query("SELECT COUNT(*) as total FROM orders")->fetch_assoc()['total'];

@@ -1,30 +1,40 @@
 <?php
 session_start();
+
 $response = ['success' => false];
 
-if (isset($_GET['index']) && isset($_GET['action'])) {
+if (isset($_GET['index']) && isset($_GET['action']) && isset($_GET['value'])) {
     $index = $_GET['index'];
     $action = $_GET['action'];
     $value = $_GET['value'];
 
+    // Check if the item exists in the cart
     if (isset($_SESSION['cart'][$index])) {
         
-        if ($action === 'quantity') {
-            $newQty = intval($value);
-            if ($newQty > 0) {
-                $_SESSION['cart'][$index]['quantity'] = $newQty;
-                $response['success'] = true;
-            }
-        } 
-        elseif ($action === 'color') {
-            // Save the user's choice to 'selected_color'
-            $_SESSION['cart'][$index]['selected_color'] = $value; 
-            $response['success'] = true;
+        switch ($action) {
+            case 'remove':
+                unset($_SESSION['cart'][$index]);
+                break;
+
+            case 'quantity':
+                // Ensure quantity is at least 1
+                if ($value > 0) {
+                    $_SESSION['cart'][$index]['quantity'] = intval($value);
+                }
+                break;
+
+            case 'color':
+                // Update selected color
+                $_SESSION['cart'][$index]['selected_color'] = $value;
+                break;
+
+            case 'size':
+                // Update selected size
+                $_SESSION['cart'][$index]['size'] = $value;
+                break;
         }
-        elseif ($action === 'remove') {
-            unset($_SESSION['cart'][$index]);
-            $response['success'] = true;
-        }
+
+        $response['success'] = true;
     }
 }
 

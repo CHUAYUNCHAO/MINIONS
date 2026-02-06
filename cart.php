@@ -2,19 +2,20 @@
 session_start();
 require_once 'Minionshoesconfig.php';
 
-// Redirect guests to login page immediately
+// 1. Security: Redirect guests
 if (!isset($_SESSION['user_id'])) {
-    echo "<script>alert('Please log in first.'); window.location.href='custloginandregister.php';</script>";
+    echo "<script>alert('Please log in to view your cart.'); window.location.href='custloginandregister.php';</script>";
     exit();
 }
-// Calculate Totals
+
+// 2. Calculate Totals
 $subtotal = 0;
 if (!empty($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
 }
-$tax = $subtotal * 0.06;
+$tax = $subtotal * 0.06; // 6%
 $shipping = ($subtotal > 200 || $subtotal == 0) ? 0 : 15.00;
 $total = $subtotal + $tax + $shipping;
 ?>
@@ -28,9 +29,11 @@ $total = $subtotal + $tax + $shipping;
     <style>
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; color: #333; }
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; }
+        
         .cart-container { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .cart-item { display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; padding: 25px 0; }
         .cart-item:last-child { border-bottom: none; }
+        
         .btn-checkout { background: #111; color: white; padding: 15px; border-radius: 10px; width: 100%; border: none; font-weight: 700; transition: 0.3s; }
         .btn-checkout:hover { background: #ff6b6b; color: white; }
     </style>
@@ -62,29 +65,43 @@ $total = $subtotal + $tax + $shipping;
                     <?php if (!empty($_SESSION['cart'])): ?>
                         <?php foreach ($_SESSION['cart'] as $index => $item): ?>
                             <div class="cart-item">
-                                <img src="<?= htmlspecialchars($item['image']) ?>" width="100" class="me-4 rounded">
+                                <img src="<?= htmlspecialchars($item['image']) ?>" width="100" class="me-4 rounded" onerror="this.src='https://via.placeholder.com/100'">
+                                
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between mb-2">
                                         <h5 class="fw-bold"><?= htmlspecialchars($item['name']) ?></h5>
                                         <h5 class="fw-bold">RM <?= number_format($item['price'] * $item['quantity'], 2) ?></h5>
                                     </div>
                                     
-                                    <div class="text-muted small mb-2">Size: <?= htmlspecialchars($item['size']) ?></div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <small class="text-muted me-2" style="width: 40px;">Size:</small>
+                                        <select class="form-select form-select-sm w-auto border-0 bg-light fw-bold" 
+                                                onchange="updateCart('<?= $index ?>', 'size', this.value)">
+                                            <?php 
+                                            // Define standard sizes (or fetch from product if available)
+                                            $sizes = ['US 7', 'US 8', 'US 9', 'US 10', 'US 11'];
+                                            
+                                            // Optional: If you saved specific sizes in addtocart.php, retrieve them here
+                                            // if(isset($item['all_sizes'])) $sizes = explode(',', $item['all_sizes']);
+
+                                            foreach($sizes as $s): 
+                                                $selected = ($item['size'] == $s) ? 'selected' : '';
+                                            ?>
+                                                <option value="<?= $s ?>" <?= $selected ?>><?= $s ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
 
                                     <div class="d-flex align-items-center mb-3">
-                                        <small class="text-muted me-2">Color:</small>
+                                        <small class="text-muted me-2" style="width: 40px;">Color:</small>
                                         <select class="form-select form-select-sm w-auto border-0 bg-light fw-bold" 
                                                 onchange="updateCart('<?= $index ?>', 'color', this.value)">
                                             <?php 
-                                            // 1. Get the raw string "black,red,white" from session
+                                            // Get raw string "black,red,white"
                                             $rawColors = $item['all_colors'] ?? 'Standard';
-                                            
-                                            // 2. Convert to array
                                             $availableColors = explode(',', $rawColors);
-                                            
-                                            // 3. Loop and create options
                                             foreach($availableColors as $c): 
-                                                $c = trim($c); // Remove extra spaces
+                                                $c = trim($c);
                                                 $selected = ($item['selected_color'] == $c) ? 'selected' : '';
                                             ?>
                                                 <option value="<?= $c ?>" <?= $selected ?>><?= ucfirst($c) ?></option>
@@ -109,6 +126,7 @@ $total = $subtotal + $tax + $shipping;
                         <div class="text-center py-5">
                             <i class="fas fa-shopping-cart fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
                             <h4 class="text-muted">Your cart is empty</h4>
+                            <a href="catelouge.php" class="btn btn-outline-dark mt-3">Start Shopping</a>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -130,14 +148,27 @@ $total = $subtotal + $tax + $shipping;
 
     <script>
         function updateCart(index, action, value) {
+            // Prevent negative quantity
             if (action === 'quantity' && value < 1) return;
+            
+            // Show loading spinner
             document.getElementById('loadingOverlay').style.display = 'flex';
             
+            // Send request to backend
             fetch(`updatecart.php?index=${index}&action=${action}&value=${value}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) location.reload();
-                    else alert('Error updating cart');
+                    if (data.success) {
+                        location.reload(); // Reload page to update totals/display
+                    } else {
+                        alert('Error updating cart');
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Connection Error');
+                    document.getElementById('loadingOverlay').style.display = 'none';
                 });
         }
     </script>

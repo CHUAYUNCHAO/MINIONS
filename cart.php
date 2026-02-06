@@ -79,7 +79,7 @@ $total = $subtotal + $tax + $shipping;
                                                 onchange="updateCart('<?= $index ?>', 'size', this.value)">
                                             <?php 
                                             // Define standard sizes (or fetch from product if available)
-                                            $sizes = ['US 7', 'US 8', 'US 9', 'US 10', 'US 11'];
+                                            $sizes = ['US 7', 'US 8', 'US 9', 'US 10', 'US 11', 'UK 6', 'UK 7','UK 8','UK 9','UK 10','EU 40', 'EU 41', 'EU 42', 'EU 43','Custom'];
                                             
                                             // Optional: If you saved specific sizes in addtocart.php, retrieve them here
                                             // if(isset($item['all_sizes'])) $sizes = explode(',', $item['all_sizes']);

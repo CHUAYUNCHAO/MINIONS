@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stock = $_POST['stock'];
     $category = $_POST['category'];
 
-    $stmt = $conn->prepare("UPDATE products SET product_name=?, price=?, stock=?, category=? WHERE id=?");
+    $stmt = $conn->prepare("UPDATE allproducts SET product_name=?, price=?, stock=?, category=? WHERE id=?");
     $stmt->bind_param("sdisi", $name, $price, $stock, $category, $id);
     
     if ($stmt->execute()) {
